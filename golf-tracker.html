@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swing Lab — Golf Fitness & Sim Tracker</title>
+<style>
+  :root{
+    --turf:#EAF2E3;
+    --paper:#FFFFFF;
+    --ink:#14281D;
+    --pine:#175C41;
+    --lime:#CDEBB4;
+    --ball:#FFD23F;
+    --flag:#E4572E;
+    --mist:#5E7A6B;
+    --display: ui-rounded, "SF Pro Rounded", "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+    --body: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--turf);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:16px;
+    line-height:1.45;
+    padding-bottom:64px;
+  }
+  header{
+    background:var(--pine);
+    color:#fff;
+    padding:20px 16px 14px;
+    border-bottom:3px solid var(--ink);
+  }
+  .head-inner{ max-width:780px; margin:0 auto; }
+  h1{
+    font-family:var(--display);
+    font-weight:800;
+    font-size:1.85rem;
+    letter-spacing:-.02em;
+    margin:0;
+  }
+  h1 .flag{ color:var(--ball); }
+  .tagline{ margin:2px 0 0; font-size:.85rem; opacity:.85; }
+  nav{
+    position:sticky; top:0; z-index:50;
+    background:var(--pine);
+    border-bottom:3px solid var(--ink);
+    padding:8px 16px 10px;
+  }
+  .tabs{ max-width:780px; margin:0 auto; display:flex; gap:8px; }
+  .tab{
+    flex:1;
+    font-family:var(--display);
+    font-weight:800;
+    font-size:1rem;
+    padding:10px 6px;
+    border:2px solid var(--ink);
+    border-radius:14px;
+    background:#fff;
+    color:var(--ink);
+    cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .08s ease, box-shadow .08s ease, background .08s ease;
+  }
+  .tab:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+  .tab.active{ background:var(--ball); }
+  .tab:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:3px solid var(--flag); outline-offset:2px;
+  }
+  main{ max-width:780px; margin:0 auto; padding:18px 16px; }
+  .card{
+    background:var(--paper);
+    border:2px solid var(--ink);
+    border-radius:16px;
+    box-shadow:4px 4px 0 var(--ink);
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-family:var(--display);
+    font-weight:800;
+    font-size:1.25rem;
+    margin:0 0 10px;
+    letter-spacing:-.01em;
+  }
+  .card h3{
+    font-family:var(--display);
+    font-weight:800;
+    font-size:1.02rem;
+    margin:0 0 8px;
+  }
+  .muted{ color:var(--mist); font-size:.85rem; }
+  .day-card{ display:flex; align-items:center; gap:12px; }
+  .day-card.today{ background:var(--lime); }
+  .day-emoji{ font-size:2rem; }
+  .day-info{ flex:1; min-width:0; }
+  .day-name{ font-family:var(--display); font-weight:800; font-size:1.05rem; }
+  .day-title{ font-size:.9rem; color:var(--mist); }
+  .today-badge{
+    display:inline-block; margin-left:6px;
+    background:var(--flag); color:#fff;
+    font-size:.65rem; font-weight:700;
+    padding:2px 8px; border-radius:999px;
+    vertical-align:middle; letter-spacing:.03em;
+  }
+  .btn{
+    font-family:var(--display);
+    font-weight:800;
+    font-size:.92rem;
+    padding:10px 14px;
+    border:2px solid var(--ink);
+    border-radius:12px;
+    background:var(--ball);
+    color:var(--ink);
+    cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .08s ease, box-shadow .08s ease;
+    white-space:nowrap;
+  }
+  .btn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+  .btn.secondary{ background:#fff; }
+  .btn.big{ width:100%; font-size:1.1rem; padding:14px; background:var(--flag); color:#fff; }
+  .btn.small{ font-size:.8rem; padding:6px 10px; box-shadow:2px 2px 0 var(--ink); }
+  .btn-row{ display:flex; flex-wrap:wrap; gap:10px; }
+  .suggestion{
+    background:var(--lime);
+    border:2px dashed var(--ink);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:14px;
+    font-size:.92rem;
+  }
+  .suggestion strong{ font-family:var(--display); }
+  .fairway{
+    position:relative;
+    height:34px;
+    background:repeating-linear-gradient(90deg, #BFE0A6 0 28px, #AFD695 28px 56px);
+    border:2px solid var(--ink);
+    border-radius:999px;
+    margin:10px 0 4px;
+    overflow:hidden;
+  }
+  .fairway-fill{
+    position:absolute; inset:0 auto 0 0;
+    background:var(--pine);
+    width:0%;
+    transition:width .35s ease;
+  }
+  .fairway-ball{
+    position:absolute; top:50%;
+    transform:translate(-50%,-50%);
+    left:0%;
+    font-size:1.15rem;
+    transition:left .35s ease;
+    filter:drop-shadow(1px 1px 0 rgba(0,0,0,.25));
+  }
+  .fairway-flag{
+    position:absolute; right:8px; top:50%;
+    transform:translateY(-50%);
+    font-size:1.15rem;
+  }
+  .fairway-label{ font-family:var(--mono); font-size:.8rem; color:var(--mist); text-align:right; }
+  .set-row{
+    display:flex; align-items:center; flex-wrap:wrap; gap:10px;
+    padding:10px 8px;
+    border-bottom:1px dashed #C9D8C4;
+  }
+  .set-row:last-of-type{ border-bottom:none; }
+  .set-row label.chk{
+    display:flex; align-items:center; gap:10px;
+    flex:1; min-width:180px; cursor:pointer;
+  }
+  input[type="checkbox"]{
+    width:26px; height:26px;
+    accent-color:var(--pine);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .set-row.done .reps{ text-decoration:line-through; color:var(--mist); }
+  .mini-input{
+    width:74px;
+    padding:7px 8px;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    font-family:var(--mono);
+    font-size:.85rem;
+  }
+  .mini-label{ font-size:.72rem; color:var(--mist); display:block; margin-bottom:2px; }
+  .feel-row{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .feel-label{ font-size:.82rem; color:var(--mist); margin-right:4px; }
+  .feel-btn{
+    font-size:1.25rem;
+    background:#fff;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:4px 8px;
+    cursor:pointer;
+    opacity:.45;
+    transition:opacity .1s ease, transform .1s ease;
+  }
+  .feel-btn.selected{ opacity:1; background:var(--ball); transform:scale(1.08); }
+  .note-input, textarea{
+    width:100%;
+    padding:9px 10px;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    font-family:var(--body);
+    font-size:.9rem;
+    margin-top:8px;
+    resize:vertical;
+  }
+  textarea{ min-height:64px; }
+  select, input[type="date"], input[type="number"], input[type="text"]{
+    padding:9px 10px;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    font-family:var(--body);
+    font-size:.9rem;
+    background:#fff;
+  }
+  /* simulator form: two vertical columns */
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .form-grid .field label{ font-size:.75rem; color:var(--mist); display:block; margin-bottom:3px; font-weight:600; }
+  .form-grid .field input, .form-grid .field select{ width:100%; }
+  .pair{ display:flex; gap:6px; align-items:stretch; }
+  .form-grid .field .pair input{ flex:1 1 auto; width:auto; min-width:0; }
+  .form-grid .field .pair select{ width:52px; flex:0 0 52px; padding:9px 4px; text-align:center; }
+  @media (max-width:380px){ .form-grid{ grid-template-columns:1fr; } }
+  .smash-view{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:1rem;
+    background:var(--lime);
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:9px 10px;
+    text-align:center;
+  }
+  .table-wrap{ overflow-x:auto; }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    font-size:.82rem;
+  }
+  th, td{
+    border:1px solid #C9D8C4;
+    padding:6px 8px;
+    text-align:left;
+    white-space:nowrap;
+  }
+  th{
+    background:var(--pine);
+    color:#fff;
+    font-family:var(--display);
+    font-weight:800;
+    font-size:.75rem;
+  }
+  td.num{ font-family:var(--mono); text-align:right; }
+  tr:nth-child(even) td{ background:#F4F9F0; }
+  /* charts */
+  .chart-block{ margin-bottom:18px; }
+  .chart-title{
+    font-family:var(--display); font-weight:800; font-size:.95rem;
+    margin:0 0 4px;
+  }
+  .chart-frame{
+    border:2px solid var(--ink);
+    border-radius:12px;
+    background:#FBFDF8;
+    padding:6px;
+  }
+  .chart-frame svg{ display:block; width:100%; height:auto; }
+  .chart-empty{
+    border:2px dashed #C9D8C4;
+    border-radius:12px;
+    padding:14px;
+    text-align:center;
+    color:var(--mist);
+    font-size:.85rem;
+  }
+  /* shot path tracker */
+  #path-tracker g{ cursor:pointer; }
+  #path-tracker g path.vis{ opacity:.75; transition:opacity .1s ease; }
+  #path-tracker g:hover path.vis{ opacity:1; }
+  #path-tracker g.sel path.vis{ opacity:1; stroke-width:5.5; }
+  .shot-detail{
+    margin-top:10px;
+    border:2px dashed #C9D8C4;
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:.83rem;
+    font-family:var(--mono);
+    color:var(--mist);
+  }
+  .shot-detail.active{
+    border-style:solid;
+    border-color:var(--ink);
+    background:var(--lime);
+    color:var(--ink);
+  }
+  /* putting green */
+  .putt-frame{
+    border:2px solid var(--ink);
+    border-radius:12px;
+    overflow:hidden;
+    background:#3E9E52;
+  }
+  .putt-frame svg{ display:block; width:100%; height:auto; }
+  .putt-frame svg.tappable{ cursor:crosshair; }
+  .putt-status{
+    font-family:var(--display); font-weight:800;
+    text-align:center; font-size:1rem; margin:10px 0;
+  }
+  .putt-chips{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+  .chip{
+    background:var(--lime);
+    border:2px solid var(--ink);
+    border-radius:999px;
+    padding:4px 12px;
+    font-family:var(--mono);
+    font-size:.8rem;
+    font-weight:700;
+  }
+  /* shot-shape picker */
+  .shape-picker-wrap{
+    border:2px solid var(--ink);
+    border-radius:12px;
+    background:#20261F;
+    padding:6px;
+    margin-bottom:10px;
+  }
+  .shape-picker-wrap svg{ display:block; width:100%; height:auto; }
+  #shape-picker g{ cursor:pointer; opacity:.55; transition:opacity .12s ease; }
+  #shape-picker g:hover{ opacity:.85; }
+  #shape-picker g.sel{ opacity:1; }
+  #shape-picker g path{ fill:none; stroke-width:3; stroke-linecap:round; }
+  #shape-picker g.sel path{ stroke-width:5.5; }
+  #shape-picker g text{
+    font-family:var(--display);
+    font-weight:800;
+    font-size:15px;
+  }
+  #shape-picker g.sel text{ font-size:17px; text-decoration:underline; }
+  .shape-selected{
+    font-family:var(--display); font-weight:800; font-size:.9rem;
+    margin:0 0 10px; text-align:center;
+  }
+  .ai-status{ font-size:.85rem; margin-top:10px; font-family:var(--mono); }
+  .ai-status.err{ color:var(--flag); }
+  .ai-status.ok{ color:var(--pine); }
+  details{ margin-top:12px; }
+  details summary{
+    cursor:pointer;
+    font-family:var(--display);
+    font-weight:800;
+    font-size:.9rem;
+    color:var(--pine);
+  }
+  .toast{
+    position:fixed; left:50%; bottom:24px;
+    transform:translateX(-50%);
+    background:var(--ink); color:#fff;
+    font-family:var(--display); font-weight:800;
+    padding:12px 20px;
+    border-radius:14px;
+    border:2px solid #fff;
+    box-shadow:4px 4px 0 rgba(0,0,0,.3);
+    z-index:200;
+    animation:toastIn .25s ease;
+    max-width:90vw;
+    text-align:center;
+  }
+  @keyframes toastIn{ from{ opacity:0; transform:translateX(-50%) translateY(14px);} to{ opacity:1; transform:translateX(-50%) translateY(0);} }
+  .confetti{
+    position:fixed; top:-40px; z-index:150;
+    font-size:1.5rem;
+    animation:fall 1.8s ease-in forwards;
+    pointer-events:none;
+  }
+  @keyframes fall{
+    to{ transform:translateY(110vh) rotate(360deg); opacity:.2; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+  .back-link{
+    display:inline-block;
+    margin-bottom:12px;
+    font-family:var(--display);
+    font-weight:800;
+    color:var(--pine);
+    text-decoration:none;
+    cursor:pointer;
+    font-size:.92rem;
+  }
+  @media (max-width:520px){
+    h1{ font-size:1.5rem; }
+    .tab{ font-size:.78rem; padding:9px 2px; }
+    .tabs{ gap:6px; }
+    .day-card{ flex-wrap:wrap; }
+    .day-card .btn{ width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-inner">
+    <h1>SWING LAB <span class="flag">⛳</span></h1>
+    <p class="tagline" id="tagline"></p>
+  </div>
+</header>
+
+<nav>
+  <div class="tabs">
+    <button class="tab" id="tab-plan" onclick="go('plan')">Plan</button>
+    <button class="tab" id="tab-today" onclick="go('today')">Today</button>
+    <button class="tab" id="tab-progress" onclick="go('progress')">Progress</button>
+    <button class="tab" id="tab-putt" onclick="go('putt')">Putt</button>
+    <button class="tab" id="tab-chip" onclick="go('chip')">Chip</button>
+  </div>
+</nav>
+
+<main id="app"></main>
+
+<script>
+"use strict";
+
+/* =========================================================
+   STORAGE (localStorage with safe in-memory fallback)
+========================================================= */
+const storage = (() => {
+  try {
+    localStorage.setItem("__swinglab_test", "1");
+    localStorage.removeItem("__swinglab_test");
+    return localStorage;
+  } catch (e) {
+    console.warn("localStorage unavailable — running in-memory (data won't persist).");
+    const mem = {};
+    return {
+      getItem: k => (k in mem ? mem[k] : null),
+      setItem: (k, v) => { mem[k] = String(v); },
+      removeItem: k => { delete mem[k]; }
+    };
+  }
+})();
+
+const KEYS = {
+  profile: "golfTracker_userProfile",
+  plan: "golfTracker_weeklyPlan",
+  sims: "golfTracker_simulatorSessions",
+  feel: "golfTracker_dailyFeel",
+  history: "golfTracker_history",
+  exFeel: "golfTracker_exerciseFeelLog",
+  puttRounds: "golfTracker_puttingRounds",
+  puttCurrent: "golfTracker_puttingCurrent",
+  chipRounds: "golfTracker_chippingRounds",
+  chipCurrent: "golfTracker_chippingCurrent",
+  planBackup: "golfTracker_planBackup"
+};
+
+function load(key, fallback) {
+  try {
+    const raw = storage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) { return fallback; }
+}
+function save(key, value) {
+  try { storage.setItem(key, JSON.stringify(value)); } catch (e) { console.error("Save failed:", e); }
+}
+
+/* =========================================================
+   DATA MODEL
+========================================================= */
+const DEFAULT_PROFILE = {
+  name: "",
+  heightCm: 167,
+  weightKg: 54,
+  goals: "Increase club speed, improve strike quality, maintain mobility"
+};
+
+function gymSets(n, reps) {
+  return Array.from({ length: n }, () => ({ reps, done: false, weight: null, rpe: null }));
+}
+function plainSets(list) {
+  return list.map(r => ({ reps: r, done: false }));
+}
+
+function defaultPlan() {
+  return [
+    {
+      day: "Monday", type: "simulator", title: "Simulator – Technique & Speed",
+      exercises: [
+        { name: "Warm-up", sets: plainSets([
+          "5 min walk", "10 bodyweight squats", "6 reverse lunge with rotation/side",
+          "12 glute bridges", "6 thoracic rotations/side",
+          "5 practice swings @ 50%", "5 practice swings @ 70%", "3 practice swings @ 80%"
+        ]), feelAfter: null, note: "" },
+        { name: "Technical block", sets: plainSets(["10–15 balls (wedges/short irons)"]), feelAfter: null, note: "" },
+        { name: "Contact block", sets: plainSets(["15–20 balls, focus on centered strike"]), feelAfter: null, note: "" },
+        { name: "Driver block", sets: plainSets(["10–15 drives @ 75–85%"]), feelAfter: null, note: "" },
+        { name: "Speed block", sets: plainSets(["4–6 drives @ 90%, 30–60s rest"]), feelAfter: null, note: "" },
+        { name: "Finish", sets: plainSets(["5 normal swings, focus on balance"]), feelAfter: null, note: "" }
+      ],
+      notes: { driver: "", woods: "", hybrid: "", irons: "" }
+    },
+    {
+      day: "Tuesday", type: "gym", title: "Strength A",
+      exercises: [
+        { name: "Dumbbell Romanian deadlift", sets: gymSets(3, "6–8"), feelAfter: null, note: "" },
+        { name: "Goblet squat", sets: gymSets(3, "8"), feelAfter: null, note: "" },
+        { name: "Rear-foot-elevated split squat", sets: gymSets(3, "6/leg"), feelAfter: null, note: "" },
+        { name: "One-arm dumbbell row", sets: gymSets(3, "8/side"), feelAfter: null, note: "" },
+        { name: "Dumbbell floor press", sets: gymSets(3, "8–10"), feelAfter: null, note: "" },
+        { name: "Side plank", sets: plainSets(["20–30s/side", "20–30s/side", "20–30s/side"]), feelAfter: null, note: "" },
+        { name: "Dead bug", sets: plainSets(["8/side", "8/side"]), feelAfter: null, note: "" }
+      ],
+      notes: { driver: "", woods: "", hybrid: "", irons: "" }
+    },
+    {
+      day: "Wednesday", type: "recovery", title: "Mobility & Easy Treadmill",
+      exercises: [
+        { name: "Treadmill incline walk", sets: plainSets(["20–30 min easy"]), feelAfter: null, note: "" },
+        { name: "90/90 hip rotation", sets: plainSets(["6/side × 2"]), feelAfter: null, note: "" },
+        { name: "Adductor rock-back", sets: plainSets(["8/side × 2"]), feelAfter: null, note: "" },
+        { name: "Ankle mobility with yoga block", sets: plainSets(["10/side × 2"]), feelAfter: null, note: "" },
+        { name: "Thoracic rotations", sets: plainSets(["8/side × 2"]), feelAfter: null, note: "" },
+        { name: "Shoulder mobility with yoga ring", sets: plainSets(["8–10 × 2"]), feelAfter: null, note: "" }
+      ],
+      notes: { driver: "", woods: "", hybrid: "", irons: "" }
+    },
+    {
+      day: "Thursday", type: "gym", title: "Strength B + Power",
+      exercises: [
+        { name: "Dumbbell squat jump", sets: gymSets(3, "4"), feelAfter: null, note: "" },
+        { name: "Lateral bound & controlled landing", sets: plainSets(["4/side", "4/side", "4/side"]), feelAfter: null, note: "" },
+        { name: "Split-stance dumbbell push press", sets: gymSets(3, "5/side"), feelAfter: null, note: "" },
+        { name: "Rotational dumbbell lift", sets: gymSets(3, "5/side"), feelAfter: null, note: "" },
+        { name: "Single-leg dumbbell RDL", sets: gymSets(3, "8/leg"), feelAfter: null, note: "" },
+        { name: "Dumbbell hip thrust or glute bridge", sets: gymSets(3, "10"), feelAfter: null, note: "" },
+        { name: "Reverse lunge", sets: gymSets(3, "8/leg"), feelAfter: null, note: "" },
+        { name: "Half-kneeling one-arm dumbbell press", sets: gymSets(3, "6–8/side"), feelAfter: null, note: "" },
+        { name: "Suitcase carry", sets: gymSets(3, "30–40s/side"), feelAfter: null, note: "" },
+        { name: "Bird dog", sets: plainSets(["6/side", "6/side"]), feelAfter: null, note: "" }
+      ],
+      notes: { driver: "", woods: "", hybrid: "", irons: "" }
+    },
+    {
+      day: "Friday", type: "simulator", title: "Simulator – Performance & Speed",
+      exercises: [
+        { name: "Warm-up", sets: plainSets(["Dynamic warm-up + 3 squat jumps + 3 lateral bounds + 3 progressive swings"]), feelAfter: null, note: "" },
+        { name: "Wedge calibration", sets: plainSets(["10 balls"]), feelAfter: null, note: "" },
+        { name: "Random practice", sets: plainSets(["20–25 balls, different targets/clubs"]), feelAfter: null, note: "" },
+        { name: "Driver speed", sets: plainSets(["3 × 4 swings, 45–60s rest"]), feelAfter: null, note: "" },
+        { name: "Performance test", sets: plainSets(["10 drives or simulated 9-hole challenge"]), feelAfter: null, note: "" },
+        { name: "Cool-down", sets: plainSets(["5 easy swings + light mobility"]), feelAfter: null, note: "" }
+      ],
+      notes: { driver: "", woods: "", hybrid: "", irons: "" }
+    },
+    {
+      day: "Saturday", type: "recovery", title: "Optional Golf / Recovery",
+      exercises: [
+        { name: "Optional golf or easy walk", sets: plainSets(["As played"]), feelAfter: null, note: "" }
+      ],
+      notes: { driver: "", woods: "", hybrid: "", irons: "" }
+    },
+    {
+      day: "Sunday", type: "recovery", title: "Rest",
+      exercises: [],
+      notes: { driver: "", woods: "", hybrid: "", irons: "" }
+    }
+  ];
+}
+
+/* ---------- state ---------- */
+let userProfile = Object.assign({}, DEFAULT_PROFILE, load(KEYS.profile, {}));
+let weeklyPlan = load(KEYS.plan, defaultPlan());
+let simulatorSessions = load(KEYS.sims, []);
+let dailyFeel = load(KEYS.feel, {});
+let history = load(KEYS.history, {});
+let exerciseFeelLog = load(KEYS.exFeel, []); // [{date, day, name, feel, note}]
+let puttingRounds = load(KEYS.puttRounds, []);
+let puttCurrent = load(KEYS.puttCurrent, null);
+// migrate older rounds that stored distanceFt
+[puttCurrent].concat(puttingRounds).forEach(pr => {
+  if (pr && pr.distanceYds == null && pr.distanceFt != null) { pr.distanceYds = pr.distanceFt; delete pr.distanceFt; }
+});
+let chipRounds = load(KEYS.chipRounds, []);
+let chipCurrent = load(KEYS.chipCurrent, null);
+
+save(KEYS.profile, userProfile);
+
+let view = "plan";
+let selectedDay = todayIndex();
+let chartClub = "Driver";
+let simShape = "Straight";
+let trackClub = "All";
+let selectedShotId = null;
+let viewPuttId = null;
+let viewChipId = null;
+let pendingConfirm = null;
+let pendingConfirmAt = 0;
+
+const TYPE_EMOJI = { gym: "🏋️", simulator: "🎯", recovery: "🧘" };
+const FEEL_EMOJI = ["😖", "😕", "😐", "🙂", "🤩"];
+const CLUBS = ["Driver","3-wood","5-wood","Hybrid","4-iron","5-iron","6-iron","7-iron","8-iron","9-iron","PW","GW","SW","LW"];
+const SHAPES = ["Straight","Draw","Push","Slice","Push Slice","Fade","Pull","Hook","Pull Hook"];
+const SHAPE_COLORS = {
+  "Straight": "#C9D2CC",
+  "Fade": "#2ECC40",
+  "Draw": "#E53935",
+  "Pull": "#2A5BE2",
+  "Push": "#00CFDD",
+  "Hook": "#E8D100",
+  "Slice": "#F438E9",
+  "Pull Hook": "#8E24AA",
+  "Push Slice": "#F39C12"
+};
+
+/* =========================================================
+   HELPERS
+========================================================= */
+function todayIndex() { return (new Date().getDay() + 6) % 7; } // Monday = 0
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function dateOffsetStr(offsetDays) {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function saveAll() {
+  save(KEYS.plan, weeklyPlan);
+  save(KEYS.sims, simulatorSessions);
+  save(KEYS.feel, dailyFeel);
+  save(KEYS.history, history);
+  save(KEYS.exFeel, exerciseFeelLog);
+  save(KEYS.puttRounds, puttingRounds);
+  save(KEYS.puttCurrent, puttCurrent);
+  save(KEYS.chipRounds, chipRounds);
+  save(KEYS.chipCurrent, chipCurrent);
+  save(KEYS.profile, userProfile);
+}
+/* tap-twice confirmation — window.confirm() is blocked in some
+   sandboxed environments (e.g. Claude.ai preview), so destructive
+   buttons ask for a second tap within 4 seconds instead. */
+function confirmTap(key, msg) {
+  const now = Date.now();
+  if (pendingConfirm === key && now - pendingConfirmAt < 4000) {
+    pendingConfirm = null;
+    return true;
+  }
+  pendingConfirm = key;
+  pendingConfirmAt = now;
+  toast(msg || "Tap again to confirm ⚠️");
+  return false;
+}
+function daySetStats(day) {
+  let done = 0, total = 0;
+  day.exercises.forEach(ex => ex.sets.forEach(s => { total++; if (s.done) done++; }));
+  return { done, total, pct: total ? Math.round(done/total*100) : 0 };
+}
+function toast(msg) {
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+function confetti() {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const emojis = ["⛳","🏌️","💪","🎉","🏆","🟢"];
+  for (let i = 0; i < 18; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.textContent = emojis[i % emojis.length];
+    c.style.left = Math.random()*100 + "vw";
+    c.style.animationDelay = (Math.random()*0.6) + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 2600);
+  }
+}
+function updateTagline() {
+  const el = document.getElementById("tagline");
+  const bits = [];
+  if (userProfile.name) bits.push(userProfile.name);
+  bits.push(userProfile.heightCm + " cm");
+  bits.push(userProfile.weightKg + " kg");
+  bits.push(userProfile.goals);
+  el.textContent = "Golf fitness & simulator training tracker · " + bits.join(" · ");
+}
+function signed(val, side) {
+  if (val == null || val === "") return null;
+  return Number(val) * (side === "L" ? -1 : 1);
+}
+
+/* =========================================================
+   ADAPTIVE SUGGESTIONS
+========================================================= */
+function getSuggestions() {
+  const tips = [];
+  const ratedDates = Object.keys(dailyFeel).sort().slice(-5);
+
+  const driverByDate = {};
+  simulatorSessions.filter(s => s.club === "Driver" && s.carry != null && s.carry !== "").forEach(s => {
+    if (!driverByDate[s.date]) driverByDate[s.date] = [];
+    driverByDate[s.date].push(Number(s.carry));
+  });
+  const dDates = Object.keys(driverByDate).sort();
+  if (dDates.length >= 3) {
+    const last3 = dDates.slice(-3).map(d => {
+      const arr = driverByDate[d];
+      return arr.reduce((a,b) => a+b, 0) / arr.length;
+    });
+    const declining = last3[0] > last3[1] && last3[1] > last3[2];
+    const lastRated = ratedDates.length ? dailyFeel[ratedDates[ratedDates.length-1]] : null;
+    const feelingLow = lastRated && lastRated.overall != null && lastRated.overall <= 3;
+    if (declining && feelingLow) {
+      tips.push("🎯 <strong>Technique week?</strong> Driver carry has dipped across your last three sim sessions while energy has been low. Try dialing back max-speed swings for a week and spending that time on centered contact instead.");
+    }
+  }
+
+  const histDates = Object.keys(history).sort().slice(-3);
+  if (histDates.length === 3) {
+    const allGood = histDates.every(d =>
+      history[d].completed &&
+      dailyFeel[d] && dailyFeel[d].overall != null && dailyFeel[d].overall >= 4
+    );
+    if (allGood) {
+      tips.push("🔥 <strong>You're rolling!</strong> Three completed workouts in a row feeling great. Consider a small progression: add one set to a favorite lift, or nudge the weight up slightly on one exercise.");
+    }
+  }
+
+  return tips;
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+function go(v) {
+  view = v;
+  if (v === "today") selectedDay = todayIndex();
+  render();
+  window.scrollTo({ top: 0 });
+}
+function openDay(idx) {
+  selectedDay = idx;
+  view = "workout";
+  render();
+  window.scrollTo({ top: 0 });
+}
+
+/* =========================================================
+   RENDER — PLAN
+========================================================= */
+function renderPlan() {
+  const tips = getSuggestions();
+  let html = "";
+  tips.forEach(t => { html += '<div class="suggestion">' + t + "</div>"; });
+
+  html += '<h2 style="font-family:var(--display);font-weight:800;margin:4px 0 12px;">This Week\u2019s Card 📋</h2>';
+
+  weeklyPlan.forEach((d, i) => {
+    const isToday = i === todayIndex();
+    const stats = daySetStats(d);
+    html += '<div class="card day-card' + (isToday ? " today" : "") + '">'
+      + '<div class="day-emoji">' + TYPE_EMOJI[d.type] + "</div>"
+      + '<div class="day-info">'
+      +   '<div class="day-name">' + esc(d.day) + (isToday ? '<span class="today-badge">TODAY</span>' : "") + "</div>"
+      +   '<div class="day-title">' + esc(d.title) + "</div>"
+      +   (stats.total ? '<div class="muted">' + stats.done + "/" + stats.total + " sets checked</div>" : '<div class="muted">Rest day — go touch grass 🌱</div>')
+      + "</div>"
+      + (d.exercises.length
+          ? '<button class="btn" onclick="openDay(' + i + ')">' + (isToday ? "Start Today\u2019s Workout" : "Open") + "</button>"
+          : "")
+      + "</div>";
+  });
+
+  html += '<button class="btn secondary" onclick="resetWeek()">🔄 Reset week (uncheck all sets)</button>';
+  return html;
+}
+
+function resetWeek() {
+  if (!confirmTap("resetWeek", "Tap again to reset the whole week ⚠️")) return;
+  weeklyPlan.forEach(d => {
+    d.exercises.forEach(ex => {
+      ex.feelAfter = null;
+      ex.note = "";
+      ex.sets.forEach(s => {
+        s.done = false;
+        if ("weight" in s) s.weight = null;
+        if ("rpe" in s) s.rpe = null;
+      });
+    });
+  });
+  saveAll();
+  render();
+  toast("Fresh scorecard. New week, who dis? 🏌️");
+}
+
+/* =========================================================
+   RENDER — WORKOUT
+========================================================= */
+function renderWorkout(idx) {
+  const d = weeklyPlan[idx];
+  const stats = daySetStats(d);
+  let html = '<a class="back-link" onclick="go(\'plan\')">← Back to plan</a>';
+
+  html += '<div class="card">'
+    + '<h2>' + TYPE_EMOJI[d.type] + " " + esc(d.day) + " — " + esc(d.title) + "</h2>";
+
+  if (d.exercises.length === 0) {
+    html += '<p>Full rest today. The best swing thought is no swing thought. 🧘</p></div>';
+    return html;
+  }
+
+  html += '<div class="fairway">'
+    +   '<div class="fairway-fill" style="width:' + stats.pct + '%"></div>'
+    +   '<div class="fairway-ball" style="left:' + Math.max(3, Math.min(94, stats.pct)) + '%">⚪</div>'
+    +   '<div class="fairway-flag">⛳</div>'
+    + "</div>"
+    + '<div class="fairway-label">' + stats.done + "/" + stats.total + " sets · " + stats.pct + "% to the pin</div>"
+    + "</div>";
+
+  d.exercises.forEach((ex, ei) => {
+    html += '<div class="card"><h3>' + esc(ex.name) + "</h3>";
+    ex.sets.forEach((s, si) => {
+      const hasGymFields = "weight" in s;
+      html += '<div class="set-row' + (s.done ? " done" : "") + '">'
+        + '<label class="chk">'
+        +   '<input type="checkbox" ' + (s.done ? "checked" : "") + ' onchange="toggleSet(' + idx + "," + ei + "," + si + ')">'
+        +   '<span class="reps">Set ' + (si+1) + ": " + esc(s.reps) + "</span>"
+        + "</label>";
+      if (hasGymFields) {
+        html += '<span><span class="mini-label">Weight (kg)</span>'
+          + '<input class="mini-input" type="number" step="0.5" min="0" inputmode="decimal" value="' + esc(s.weight ?? "") + '" onchange="setField(' + idx + "," + ei + "," + si + ',\'weight\',this.value)"></span>'
+          + '<span><span class="mini-label">RPE (1–10)</span>'
+          + '<input class="mini-input" type="number" step="0.5" min="1" max="10" inputmode="decimal" value="' + esc(s.rpe ?? "") + '" onchange="setField(' + idx + "," + ei + "," + si + ',\'rpe\',this.value)"></span>';
+      }
+      html += "</div>";
+    });
+    html += '<div class="feel-row"><span class="feel-label">How did this feel?</span>';
+    for (let f = 1; f <= 5; f++) {
+      html += '<button class="feel-btn' + (ex.feelAfter === f ? " selected" : "") + '" onclick="setExFeel(' + idx + "," + ei + "," + f + ')" aria-label="Feel ' + f + ' of 5">' + FEEL_EMOJI[f-1] + "</button>";
+    }
+    html += "</div>";
+    html += '<input class="note-input" type="text" placeholder="Optional note (cues, pain-free? swing thoughts…)" value="' + esc(ex.note || "") + '" onchange="setExNote(' + idx + "," + ei + ',this.value)">';
+    html += "</div>";
+  });
+
+  if (d.type === "simulator") {
+    html += renderSimSection(idx);
+    html += renderClubNotes(idx);
+  }
+
+  const feelEntry = dailyFeel[todayStr()] || {};
+  html += '<div class="card"><h3>🏁 Wrap Up</h3>'
+    + '<div class="feel-row"><span class="feel-label">How do you feel overall today?</span>';
+  for (let f = 1; f <= 5; f++) {
+    html += '<button class="feel-btn' + (feelEntry.overall === f ? " selected" : "") + '" onclick="setDayFeel(' + f + ')" aria-label="Overall feel ' + f + ' of 5">' + FEEL_EMOJI[f-1] + "</button>";
+  }
+  html += "</div>"
+    + '<textarea placeholder="Day notes — energy, soreness, wins…" onchange="setDayNote(this.value)">' + esc(feelEntry.notes || "") + "</textarea>"
+    + '<div style="margin-top:12px;"><button class="btn big" onclick="finishWorkout(' + idx + ')">Finish Workout ✅</button></div>'
+    + '<p class="muted" style="margin:8px 0 0;">Finishing logs your per-exercise feel ratings to the tracker in Progress, so the AI Coach can adjust next week\u2019s plan.</p>'
+    + "</div>";
+
+  return html;
+}
+
+function renderClubNotes(idx) {
+  const d = weeklyPlan[idx];
+  let html = '<div class="card"><h3>📝 Club Notes</h3><p class="muted" style="margin-top:0;">Persistent training notes per club — they survive week resets.</p>';
+  ["driver","woods","hybrid","irons"].forEach(club => {
+    const label = club.charAt(0).toUpperCase() + club.slice(1);
+    html += '<label class="mini-label" style="font-size:.85rem;font-weight:700;margin-top:8px;">' + label + "</label>"
+      + '<textarea placeholder="Notes for ' + label.toLowerCase() + '…" onchange="setClubNote(' + idx + ",'" + club + "',this.value)\">" + esc(d.notes[club] || "") + "</textarea>";
+  });
+  html += "</div>";
+  return html;
+}
+
+/* ---------- workout state handlers ---------- */
+function toggleSet(di, ei, si) {
+  const s = weeklyPlan[di].exercises[ei].sets[si];
+  s.done = !s.done;
+  saveAll(); render();
+}
+function setField(di, ei, si, field, val) {
+  weeklyPlan[di].exercises[ei].sets[si][field] = val === "" ? null : Number(val);
+  saveAll();
+}
+function setExFeel(di, ei, f) {
+  const ex = weeklyPlan[di].exercises[ei];
+  ex.feelAfter = (ex.feelAfter === f) ? null : f;
+  saveAll(); render();
+}
+function setExNote(di, ei, val) {
+  weeklyPlan[di].exercises[ei].note = val;
+  saveAll();
+}
+function setClubNote(di, club, val) {
+  weeklyPlan[di].notes[club] = val;
+  saveAll();
+}
+function setDayFeel(f) {
+  const key = todayStr();
+  if (!dailyFeel[key]) dailyFeel[key] = { overall: null, notes: "" };
+  dailyFeel[key].overall = (dailyFeel[key].overall === f) ? null : f;
+  saveAll(); render();
+}
+function setDayNote(val) {
+  const key = todayStr();
+  if (!dailyFeel[key]) dailyFeel[key] = { overall: null, notes: "" };
+  dailyFeel[key].notes = val;
+  saveAll();
+}
+function finishWorkout(di) {
+  const d = weeklyPlan[di];
+  const stats = daySetStats(d);
+  const key = todayStr();
+  history[key] = {
+    day: d.day, type: d.type, title: d.title,
+    completed: true, setsDone: stats.done, setsTotal: stats.total
+  };
+  // log per-exercise feel ratings (replace any earlier log for the same date)
+  exerciseFeelLog = exerciseFeelLog.filter(e => e.date !== key);
+  d.exercises.forEach(ex => {
+    if (ex.feelAfter != null) {
+      exerciseFeelLog.push({ date: key, day: d.day, name: ex.name, feel: ex.feelAfter, note: ex.note || "" });
+    }
+  });
+  saveAll();
+  confetti();
+  toast(stats.pct === 100 ? "Full send! Every set in the hole. 🏆" : "Workout saved. Nice round! 🎉");
+  render();
+}
+
+/* =========================================================
+   SHOT-SHAPE PICKER (clickable trajectory fan)
+========================================================= */
+function shapePickerSVG() {
+  // ball at bottom center; 9 curves fanning out like the classic shot-shape chart
+  const defs = [
+    { name: "Straight",   ctrl: [250,150], end: [250,48],  label: [250,30],  anchor: "middle" },
+    { name: "Fade",       ctrl: [198,150], end: [240,64],  label: [196,52],  anchor: "middle" },
+    { name: "Draw",       ctrl: [302,150], end: [260,64],  label: [304,52],  anchor: "middle" },
+    { name: "Pull",       ctrl: [212,175], end: [163,90],  label: [150,74],  anchor: "middle" },
+    { name: "Push",       ctrl: [288,175], end: [337,90],  label: [352,74],  anchor: "middle" },
+    { name: "Hook",       ctrl: [312,128], end: [104,128], label: [86,110],  anchor: "middle" },
+    { name: "Slice",      ctrl: [188,128], end: [396,128], label: [416,110], anchor: "middle" },
+    { name: "Pull Hook",  ctrl: [152,150], end: [44,180],  label: [52,156],  anchor: "middle" },
+    { name: "Push Slice", ctrl: [348,150], end: [456,180], label: [448,156], anchor: "middle" }
+  ];
+  let svg = '<svg id="shape-picker" viewBox="0 0 500 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Shot shape picker">';
+  // target line
+  svg += '<line x1="250" y1="300" x2="250" y2="40" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="2 7" opacity=".5"/>';
+  defs.forEach(sd => {
+    const col = SHAPE_COLORS[sd.name];
+    const sel = sd.name === simShape ? " class=\"sel\"" : "";
+    svg += '<g data-shape="' + esc(sd.name) + '"' + sel + ' onclick="pickShape(\'' + sd.name + '\')">'
+      + '<path d="M250 300 Q' + sd.ctrl[0] + " " + sd.ctrl[1] + " " + sd.end[0] + " " + sd.end[1] + '" stroke="' + col + '"/>'
+      + '<circle cx="' + sd.end[0] + '" cy="' + sd.end[1] + '" r="3.5" fill="#FFFFFF"/>'
+      + '<text x="' + sd.label[0] + '" y="' + sd.label[1] + '" text-anchor="' + sd.anchor + '" fill="' + col + '">' + esc(sd.name) + "</text>"
+      + "</g>";
+  });
+  // ball + tee
+  svg += '<circle cx="250" cy="300" r="7" fill="#FFFFFF" stroke="#999" stroke-width="1"/>'
+    + '<rect x="150" y="312" width="200" height="14" rx="4" fill="#5B5F5A"/>'
+    + "</svg>";
+  return svg;
+}
+function pickShape(name) {
+  simShape = name;
+  document.querySelectorAll("#shape-picker g[data-shape]").forEach(g => {
+    g.classList.toggle("sel", g.getAttribute("data-shape") === name);
+  });
+  const lbl = document.getElementById("shape-selected");
+  if (lbl) lbl.textContent = "Shot shape: " + name;
+}
+
+/* =========================================================
+   SIMULATOR SECTION
+========================================================= */
+function renderSimSection(dayIdx) {
+  const d = weeklyPlan[dayIdx];
+  let html = '<div class="card"><h3>🎯 Simulator Session</h3>'
+    + '<p class="muted" style="margin-top:0;">Log each shot — or snap a photo of the sim screen and let AI read the numbers for you.</p>'
+
+    /* photo capture */
+    + '<div class="btn-row" style="margin-bottom:6px;align-items:center;">'
+    + '<input type="file" id="sim-photo" accept="image/*" style="max-width:230px;">'
+    + '<button class="btn secondary" onclick="scanSimPhoto()">📸 Read Data from Photo</button>'
+    + "</div>"
+    + '<div class="ai-status" id="scan-status" style="margin:0 0 12px;"></div>'
+
+    /* shot shape picker */
+    + '<div class="shape-picker-wrap">' + shapePickerSVG() + "</div>"
+    + '<p class="shape-selected" id="shape-selected">Shot shape: ' + esc(simShape) + "</p>"
+
+    /* two-column form */
+    + '<div class="form-grid">'
+    + field_select("sim-club", "Club", CLUBS)
+    + field_num("sim-total", "Total distance (yds)")
+    + field_num("sim-carry", "Carry (yds)")
+    + field_num("sim-launch", "Launch angle (°)")
+    + pair_field("sim-ldir", "Launch direction (°) + L/R")
+    + field_num("sim-back", "Back spin (rpm)")
+    + pair_field("sim-side", "Side spin (rpm) + L/R")
+    + field_num("sim-ballspeed", "Ball speed (mph)", "0.1", "updateSmash()")
+    + field_num("sim-clubspeed", "Club speed (mph)", "0.1", "updateSmash()")
+    + '<div class="field"><label>Smash factor (auto = ball ÷ club)</label><div class="smash-view" id="smash-view">–</div></div>'
+    + "</div>"
+    + '<input class="note-input" type="text" id="sim-notes" placeholder="Shot / block notes (optional)" style="margin-top:0;margin-bottom:10px;">'
+    + '<button class="btn" onclick="addSimEntry(' + dayIdx + ')">+ Add Shot</button>';
+
+  const todaysEntries = simulatorSessions.filter(s => s.date === todayStr() && s.day === d.day);
+  if (todaysEntries.length) {
+    html += '<div class="table-wrap" style="margin-top:14px;">' + simTable(todaysEntries, true) + "</div>";
+  } else {
+    html += '<p class="muted" style="margin-top:12px;">No shots logged yet today. Add your first swing above. ⬆️</p>';
+  }
+  html += "</div>";
+  return html;
+}
+function field_num(id, label, step, oninput) {
+  return '<div class="field"><label for="' + id + '">' + label + '</label>'
+    + '<input type="number" id="' + id + '" step="' + (step || "0.1") + '" inputmode="decimal"' + (oninput ? ' oninput="' + oninput + '"' : "") + "></div>";
+}
+function field_select(id, label, options, selectedIdx) {
+  let opts = "";
+  options.forEach((o, i) => {
+    opts += '<option value="' + esc(o) + '"' + (i === (selectedIdx||0) ? " selected" : "") + ">" + esc(o) + "</option>";
+  });
+  return '<div class="field"><label for="' + id + '">' + label + "</label><select id=\"" + id + '">' + opts + "</select></div>";
+}
+function pair_field(id, label) {
+  return '<div class="field"><label for="' + id + '">' + label + '</label>'
+    + '<div class="pair">'
+    + '<input type="number" id="' + id + '" step="0.1" min="0" inputmode="decimal">'
+    + '<select id="' + id + '-side" aria-label="Left or right"><option value="L">L</option><option value="R" selected>R</option></select>'
+    + "</div></div>";
+}
+function updateSmash() {
+  const b = Number(document.getElementById("sim-ballspeed").value);
+  const c = Number(document.getElementById("sim-clubspeed").value);
+  const el = document.getElementById("smash-view");
+  if (b > 0 && c > 0) el.textContent = (b / c).toFixed(2);
+  else el.textContent = "–";
+}
+function numOrNull(id) {
+  const v = document.getElementById(id).value;
+  return v === "" ? null : Number(v);
+}
+function addSimEntry(dayIdx) {
+  const ball = numOrNull("sim-ballspeed");
+  const club = numOrNull("sim-clubspeed");
+  const entry = {
+    id: Date.now(),
+    date: todayStr(),
+    day: weeklyPlan[dayIdx].day,
+    club: document.getElementById("sim-club").value,
+    totalDistance: numOrNull("sim-total"),
+    carry: numOrNull("sim-carry"),
+    launchAngle: numOrNull("sim-launch"),
+    launchDirDeg: numOrNull("sim-ldir"),
+    launchDirSide: document.getElementById("sim-ldir-side").value,
+    backSpin: numOrNull("sim-back"),
+    sideSpin: numOrNull("sim-side"),
+    sideSpinSide: document.getElementById("sim-side-side").value,
+    ballSpeed: ball,
+    clubSpeed: club,
+    smashFactor: (ball > 0 && club > 0) ? Number((ball / club).toFixed(2)) : null,
+    direction: simShape,
+    notes: document.getElementById("sim-notes").value
+  };
+  simulatorSessions.push(entry);
+  simShape = "Straight";
+  saveAll();
+  render();
+  toast("Shot logged: " + entry.club + " · " + entry.direction + " 🎯");
+}
+function deleteSimEntry(id) {
+  simulatorSessions = simulatorSessions.filter(s => s.id !== id);
+  saveAll(); render();
+}
+function fmt(v, dp) {
+  if (v == null || v === "") return "–";
+  return Number(v).toFixed(dp == null ? 0 : dp);
+}
+function fmtSide(v, side, dp) {
+  if (v == null || v === "") return "–";
+  return Number(v).toFixed(dp == null ? 0 : dp) + (side ? " " + side : "");
+}
+function simTable(entries, withDelete) {
+  let html = "<table><thead><tr>"
+    + "<th>Date</th><th>Club</th><th>Total</th><th>Carry</th><th>Launch</th><th>L-Dir</th><th>Back</th><th>Side</th><th>Shape</th><th>Ball</th><th>ClubSpd</th><th>Smash</th><th>Notes</th>"
+    + (withDelete ? "<th></th>" : "")
+    + "</tr></thead><tbody>";
+  entries.forEach(s => {
+    html += "<tr>"
+      + "<td>" + esc(s.date) + "</td>"
+      + "<td>" + esc(s.club) + "</td>"
+      + '<td class="num">' + fmt(s.totalDistance) + "</td>"
+      + '<td class="num">' + fmt(s.carry) + "</td>"
+      + '<td class="num">' + fmt(s.launchAngle, 1) + "</td>"
+      + '<td class="num">' + fmtSide(s.launchDirDeg, s.launchDirSide, 1) + "</td>"
+      + '<td class="num">' + fmt(s.backSpin) + "</td>"
+      + '<td class="num">' + fmtSide(s.sideSpin, s.sideSpinSide) + "</td>"
+      + "<td>" + esc(s.direction || "–") + "</td>"
+      + '<td class="num">' + fmt(s.ballSpeed, 1) + "</td>"
+      + '<td class="num">' + fmt(s.clubSpeed, 1) + "</td>"
+      + '<td class="num">' + fmt(s.smashFactor, 2) + "</td>"
+      + "<td>" + esc(s.notes || "") + "</td>"
+      + (withDelete ? '<td><button class="btn small secondary" onclick="deleteSimEntry(' + s.id + ')">✕</button></td>' : "")
+      + "</tr>";
+  });
+  html += "</tbody></table>";
+  return html;
+}
+
+/* =========================================================
+   PHOTO SCAN (Claude Vision)
+========================================================= */
+function setScanStatus(msg, cls) {
+  const el = document.getElementById("scan-status");
+  if (el) { el.textContent = msg; el.className = "ai-status " + (cls || ""); }
+}
+async function scanSimPhoto() {
+  const input = document.getElementById("sim-photo");
+  if (!input || !input.files || !input.files[0]) { setScanStatus("Pick a photo or screenshot first.", "err"); return; }
+  const file = input.files[0];
+  const mediaType = file.type || "image/jpeg";
+  setScanStatus("Reading your sim screen… 🔍", "");
+  try {
+    const base64Data = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result).split(",")[1]);
+      r.onerror = () => rej(new Error("Could not read the file"));
+      r.readAsDataURL(file);
+    });
+    const prompt = "This is a photo or screenshot of a golf launch monitor / simulator screen. Extract the shot metrics. "
+      + "Respond with ONLY valid JSON (no markdown, no fences, no commentary), using null for anything not visible: "
+      + '{"club": string or null (one of: ' + CLUBS.join(", ") + "), "
+      + '"totalDistance": number (yards), "carry": number (yards), "launchAngle": number (degrees, vertical), '
+      + '"launchDirDeg": number (degrees, horizontal launch direction magnitude), "launchDirSide": "L" or "R", '
+      + '"backSpin": number (rpm), "sideSpin": number (rpm, magnitude), "sideSpinSide": "L" or "R", '
+      + '"ballSpeed": number (mph), "clubSpeed": number (mph), '
+      + '"direction": one of ' + JSON.stringify(SHAPES) + " (infer the shot shape if shown or derivable, else null)}. "
+      + "Convert meters to yards (multiply by 1.094) and km/h to mph (multiply by 0.6214) if the screen uses metric units.";
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
+            { type: "text", text: prompt }
+          ]
+        }]
+      })
+    });
+    if (!response.ok) throw new Error("API returned " + response.status);
+    const data = await response.json();
+    const text = (data.content || []).filter(i => i.type === "text").map(i => i.text).join("\n");
+    const clean = text.replace(/```json|```/g, "").trim();
+    const m = JSON.parse(clean);
+    fillSimForm(m);
+    setScanStatus("Fields filled from the photo — double-check the numbers, then hit Add Shot. ✅", "ok");
+  } catch (err) {
+    console.error("Photo scan error:", err);
+    setScanStatus("Couldn't read the photo from here (" + err.message + "). This feature works when the app runs inside Claude.ai — enter the numbers manually for now.", "err");
+  }
+}
+function setVal(id, v) {
+  const el = document.getElementById(id);
+  if (el && v != null && v !== "") el.value = v;
+}
+function fillSimForm(m) {
+  if (m.club && CLUBS.indexOf(m.club) !== -1) document.getElementById("sim-club").value = m.club;
+  setVal("sim-total", m.totalDistance);
+  setVal("sim-carry", m.carry);
+  setVal("sim-launch", m.launchAngle);
+  setVal("sim-ldir", m.launchDirDeg);
+  if (m.launchDirSide === "L" || m.launchDirSide === "R") document.getElementById("sim-ldir-side").value = m.launchDirSide;
+  setVal("sim-back", m.backSpin);
+  setVal("sim-side", m.sideSpin);
+  if (m.sideSpinSide === "L" || m.sideSpinSide === "R") document.getElementById("sim-side-side").value = m.sideSpinSide;
+  setVal("sim-ballspeed", m.ballSpeed);
+  setVal("sim-clubspeed", m.clubSpeed);
+  updateSmash();
+  if (m.direction && SHAPES.indexOf(m.direction) !== -1) pickShape(m.direction);
+}
+
+/* =========================================================
+   CHARTS (hand-rolled SVG, no dependencies)
+========================================================= */
+function lineChartSVG(points, opts) {
+  const w = 640, h = 230;
+  const m = { l: 52, r: 14, t: 16, b: 30 };
+  const iw = w - m.l - m.r, ih = h - m.t - m.b;
+  const ys = points.map(p => p.y);
+  let min = Math.min.apply(null, ys), max = Math.max.apply(null, ys);
+  if (min === max) { min -= 1; max += 1; }
+  const pad = (max - min) * 0.1;
+  min -= pad; max += pad;
+  const X = i => points.length === 1 ? m.l + iw/2 : m.l + (i / (points.length - 1)) * iw;
+  const Y = v => m.t + ih - ((v - min) / (max - min)) * ih;
+  const dp = opts && opts.dp != null ? opts.dp : 0;
+
+  let svg = '<svg viewBox="0 0 ' + w + " " + h + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(opts.label) + '">';
+  for (let g = 0; g <= 4; g++) {
+    const v = min + (max - min) * (g / 4);
+    const y = Y(v);
+    svg += '<line x1="' + m.l + '" y1="' + y + '" x2="' + (w - m.r) + '" y2="' + y + '" stroke="#D8E5D2" stroke-width="1"/>'
+      + '<text x="' + (m.l - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" font-family="monospace" fill="#5E7A6B">' + v.toFixed(dp) + "</text>";
+  }
+  // zero line for signed charts
+  if (opts && opts.zeroLine && min < 0 && max > 0) {
+    const y0 = Y(0);
+    svg += '<line x1="' + m.l + '" y1="' + y0 + '" x2="' + (w - m.r) + '" y2="' + y0 + '" stroke="#14281D" stroke-width="1.5" stroke-dasharray="4 4"/>';
+  }
+  if (points.length > 1) {
+    let path = "";
+    points.forEach((p, i) => { path += (i === 0 ? "M" : "L") + X(i).toFixed(1) + " " + Y(p.y).toFixed(1) + " "; });
+    svg += '<path d="' + path + '" fill="none" stroke="#175C41" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+  }
+  points.forEach((p, i) => {
+    svg += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="4.5" fill="#E4572E" stroke="#14281D" stroke-width="1.5"><title>' + esc(p.label) + ": " + p.y.toFixed(dp) + "</title></circle>";
+  });
+  svg += '<text x="' + m.l + '" y="' + (h - 8) + '" font-size="11" font-family="monospace" fill="#5E7A6B">' + esc(points[0].label) + "</text>";
+  if (points.length > 1) {
+    svg += '<text x="' + (w - m.r) + '" y="' + (h - 8) + '" text-anchor="end" font-size="11" font-family="monospace" fill="#5E7A6B">' + esc(points[points.length-1].label) + "</text>";
+  }
+  svg += "</svg>";
+  return svg;
+}
+
+function shapeBarChartSVG(counts) {
+  // horizontal bars, one per shot shape, colored like the picker
+  const rows = SHAPES.length;
+  const rowH = 30, labelW = 110, valW = 34;
+  const w = 640, h = rows * rowH + 20;
+  const barMax = w - labelW - valW - 20;
+  const maxC = Math.max.apply(null, counts.concat([1]));
+  let svg = '<svg viewBox="0 0 ' + w + " " + h + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Shot shape distribution">';
+  SHAPES.forEach((sh, i) => {
+    const y = 10 + i * rowH;
+    const bw = (counts[i] / maxC) * barMax;
+    svg += '<text x="' + (labelW - 8) + '" y="' + (y + rowH/2 + 4) + '" text-anchor="end" font-size="13" font-weight="bold" font-family="sans-serif" fill="#14281D">' + esc(sh) + "</text>"
+      + '<rect x="' + labelW + '" y="' + (y + 4) + '" width="' + Math.max(bw, counts[i] > 0 ? 4 : 0).toFixed(1) + '" height="' + (rowH - 10) + '" rx="6" fill="' + SHAPE_COLORS[sh] + '" stroke="#14281D" stroke-width="1.5"><title>' + esc(sh) + ": " + counts[i] + "</title></rect>";
+    if (counts[i] > 0) {
+      svg += '<text x="' + (labelW + bw + 8).toFixed(1) + '" y="' + (y + rowH/2 + 4) + '" font-size="13" font-weight="bold" font-family="monospace" fill="#14281D">' + counts[i] + "</text>";
+    }
+  });
+  svg += "</svg>";
+  return svg;
+}
+
+/* =========================================================
+   SHOT PATH TRACKER (pure math — NO AI)
+   Top-down flight model, standard approximations:
+   - Start line = signed launch direction (L=− / R=+).
+   - Side spin bends the ball laterally; lateral curve at the
+     end of carry ≈ k · sideSpin(rpm) · carry(yds)², with
+     k = 2.24e-7 tuned so ~2500 rpm at 250 yds ≈ 35 yds of curve
+     (a widely used launch-monitor rule of thumb).
+   - Roll = total − carry when total is logged; otherwise
+     estimated from back spin and launch angle (more spin and
+     higher launch → less roll), continuing the landing tangent.
+========================================================= */
+const SIDE_CURVE_K = 2.24e-7; // yds of curve per (rpm · yd²)
+
+function estCarry(s) {
+  if (s.carry != null && s.carry !== "") return Number(s.carry);
+  if (s.totalDistance != null && s.totalDistance !== "") return Number(s.totalDistance) * 0.92;
+  return null;
+}
+function estRoll(s, carry) {
+  if (s.totalDistance != null && s.totalDistance !== "") {
+    return Math.max(Number(s.totalDistance) - carry, 0);
+  }
+  const bs = (s.backSpin != null && s.backSpin !== "") ? Number(s.backSpin) : 4000;
+  const la = (s.launchAngle != null && s.launchAngle !== "") ? Number(s.launchAngle) : 15;
+  let f = 0.28 - bs / 25000 - la / 300;
+  f = Math.max(0.02, Math.min(0.28, f));
+  return carry * f;
+}
+function computeShotPath(s) {
+  const carry = estCarry(s);
+  if (carry == null || carry <= 0) return null;
+  const theta = ((signed(s.launchDirDeg, s.launchDirSide) || 0)) * Math.PI / 180;
+  const spin = (s.sideSpin != null && s.sideSpin !== "") ? Number(s.sideSpin) : 0;
+  const dLat = SIDE_CURVE_K * spin * carry * carry * (s.sideSpinSide === "L" ? -1 : 1);
+  const slope = Math.tan(theta);
+  const ctrl = { x: slope * carry / 2, y: carry / 2 };          // straight along start line
+  const end  = { x: slope * carry + dLat, y: carry };            // curved landing point
+  const roll = estRoll(s, carry);
+  let tx = end.x - ctrl.x, ty = end.y - ctrl.y;
+  const tl = Math.hypot(tx, ty) || 1;
+  tx /= tl; ty /= tl;
+  const fin = { x: end.x + tx * roll, y: end.y + ty * roll };    // roll along landing tangent
+  return { ctrl: ctrl, end: end, fin: fin };
+}
+function pathTrackerSVG(shots) {
+  const items = [];
+  shots.forEach(s => {
+    const p = computeShotPath(s);
+    if (p) items.push({ s: s, p: p });
+  });
+  if (!items.length) return null;
+
+  const w = 500, h = 580;
+  const tee = { x: 250, y: 540 };
+  const topPad = 34;
+  let maxD = 0;
+  items.forEach(it => { maxD = Math.max(maxD, it.p.fin.y, it.p.end.y); });
+  const step = maxD <= 150 ? 25 : 50;
+  maxD = Math.max(Math.ceil(maxD * 1.06 / step) * step, step * 2);
+  const scale = (tee.y - topPad) / maxD;
+  const PX = v => tee.x + v * scale;
+  const PY = v => tee.y - v * scale;
+
+  let svg = '<svg id="path-tracker" viewBox="0 0 ' + w + " " + h + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Shot path tracker">'
+    + '<rect x="0" y="0" width="' + w + '" height="' + h + '" rx="10" fill="#DDEECF"/>';
+
+  // distance arcs + labels
+  for (let r = step; r <= maxD; r += step) {
+    svg += '<circle cx="' + tee.x + '" cy="' + tee.y + '" r="' + (r * scale).toFixed(1) + '" fill="none" stroke="#A8CD92" stroke-width="1.5"/>'
+      + '<text x="' + tee.x + '" y="' + (PY(r) - 5).toFixed(1) + '" text-anchor="middle" font-size="12" font-family="monospace" font-weight="bold" fill="#5E7A6B">' + r + " yds</text>";
+  }
+  // target line
+  svg += '<line x1="' + tee.x + '" y1="' + tee.y + '" x2="' + tee.x + '" y2="' + topPad + '" stroke="#14281D" stroke-width="1.5" stroke-dasharray="3 8" opacity=".55"/>';
+
+  // shot paths (drawn oldest first so newest sits on top)
+  items.forEach(it => {
+    const s = it.s, p = it.p;
+    const col = SHAPE_COLORS[s.direction] || "#8A938E";
+    const d = "M" + tee.x + " " + tee.y
+      + " Q" + PX(p.ctrl.x).toFixed(1) + " " + PY(p.ctrl.y).toFixed(1)
+      + " " + PX(p.end.x).toFixed(1) + " " + PY(p.end.y).toFixed(1)
+      + " L" + PX(p.fin.x).toFixed(1) + " " + PY(p.fin.y).toFixed(1);
+    const sel = s.id === selectedShotId ? ' class="sel"' : "";
+    svg += '<g data-shot="' + s.id + '"' + sel + ' onclick="showShot(' + s.id + ')">'
+      + '<path class="vis" d="' + d + '" fill="none" stroke="' + col + '" stroke-width="3.5" stroke-linecap="round"/>'
+      + '<path d="' + d + '" fill="none" stroke="#000" stroke-opacity="0" stroke-width="16" style="pointer-events:stroke"/>'
+      + '<circle cx="' + PX(p.fin.x).toFixed(1) + '" cy="' + PY(p.fin.y).toFixed(1) + '" r="4" fill="' + col + '" stroke="#14281D" stroke-width="1.2"/>'
+      + "</g>";
+  });
+
+  // tee ball
+  svg += '<circle cx="' + tee.x + '" cy="' + tee.y + '" r="6" fill="#FFFFFF" stroke="#14281D" stroke-width="1.5"/>'
+    + "</svg>";
+  return svg;
+}
+function shotDetailHTML(s) {
+  return "<strong>" + esc(s.date) + " · " + esc(s.club) + " · " + esc(s.direction || "–") + "</strong><br>"
+    + "Carry " + fmt(s.carry) + " yds · Total " + fmt(s.totalDistance) + " yds<br>"
+    + "Launch " + fmt(s.launchAngle, 1) + "° · L-Dir " + fmtSide(s.launchDirDeg, s.launchDirSide, 1) + "° · "
+    + "Back " + fmt(s.backSpin) + " rpm · Side " + fmtSide(s.sideSpin, s.sideSpinSide) + " rpm<br>"
+    + "Ball " + fmt(s.ballSpeed, 1) + " mph · Club " + fmt(s.clubSpeed, 1) + " mph · Smash " + fmt(s.smashFactor, 2)
+    + (s.notes ? "<br>📝 " + esc(s.notes) : "");
+}
+function showShot(id) {
+  selectedShotId = id;
+  const s = simulatorSessions.find(x => x.id === id);
+  const el = document.getElementById("shot-detail");
+  if (s && el) { el.innerHTML = shotDetailHTML(s); el.classList.add("active"); }
+  document.querySelectorAll("#path-tracker g[data-shot]").forEach(g => {
+    g.classList.toggle("sel", Number(g.getAttribute("data-shot")) === id);
+  });
+}
+
+/* =========================================================
+   RENDER — PROGRESS
+========================================================= */
+function renderProgress() {
+  const tips = getSuggestions();
+  let html = "";
+  tips.forEach(t => { html += '<div class="suggestion">' + t + "</div>"; });
+
+  /* ---- profile (editable) ---- */
+  html += '<div class="card"><h2>👤 Profile</h2>'
+    + '<div class="form-grid">'
+    + '<div class="field"><label for="pf-name">Name</label><input type="text" id="pf-name" value="' + esc(userProfile.name) + '" placeholder="Your name"></div>'
+    + '<div class="field"><label for="pf-h">Height (cm)</label><input type="number" id="pf-h" step="0.5" value="' + esc(userProfile.heightCm) + '"></div>'
+    + '<div class="field"><label for="pf-w">Weight (kg)</label><input type="number" id="pf-w" step="0.1" value="' + esc(userProfile.weightKg) + '"></div>'
+    + '<div class="field"><label for="pf-g">Goals</label><input type="text" id="pf-g" value="' + esc(userProfile.goals) + '"></div>'
+    + "</div>"
+    + '<button class="btn" onclick="saveProfile()">Save Profile 💾</button>'
+    + "</div>";
+
+  /* ---- exercise feel tracker ---- */
+  html += '<div class="card"><h2>💪 Exercise Feel Tracker</h2>'
+    + '<p class="muted" style="margin-top:0;">Logged every time you hit Finish Workout. Lowest-rated exercises float to the top — prime candidates for the AI Coach to swap out.</p>';
+  if (exerciseFeelLog.length) {
+    const byEx = {};
+    exerciseFeelLog.forEach(e => {
+      if (!byEx[e.name]) byEx[e.name] = [];
+      byEx[e.name].push(e);
+    });
+    const rows = Object.keys(byEx).map(name => {
+      const list = byEx[name].slice().sort((a,b) => (a.date < b.date ? -1 : 1));
+      const avg = list.reduce((a,e) => a + e.feel, 0) / list.length;
+      return { name: name, count: list.length, avg: avg, recent: list.slice(-5) };
+    }).sort((a,b) => a.avg - b.avg);
+    html += '<div class="table-wrap"><table><thead><tr><th>Exercise</th><th>Times rated</th><th>Avg feel</th><th>Recent (oldest → newest)</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      html += "<tr><td>" + esc(r.name) + "</td>"
+        + '<td class="num">' + r.count + "</td>"
+        + '<td class="num">' + r.avg.toFixed(1) + " " + FEEL_EMOJI[Math.round(r.avg)-1] + "</td>"
+        + "<td>" + r.recent.map(e => '<span title="' + esc(e.date) + '">' + FEEL_EMOJI[e.feel-1] + "</span>").join(" ") + "</td>"
+        + "</tr>";
+    });
+    html += "</tbody></table></div>"
+      + '<p class="muted" style="margin:8px 0 0;">Scale: 1 = 😖 rough · 5 = 🤩 great</p>';
+  } else {
+    html += '<div class="chart-empty">No ratings logged yet. Rate exercises during a workout and hit Finish Workout — they\u2019ll pile up here.</div>';
+  }
+  html += "</div>";
+
+  /* ---- charts by club ---- */
+  html += '<div class="card"><h2>📈 Club Graphs</h2>'
+    + '<div class="field" style="max-width:220px;margin-bottom:14px;"><label class="mini-label" style="font-weight:600;">Club</label>'
+    + '<select style="width:100%;" onchange="chartClub=this.value;render()">';
+  CLUBS.forEach(c => { html += '<option' + (chartClub === c ? " selected" : "") + ">" + esc(c) + "</option>"; });
+  html += "</select></div>";
+
+  const shots = simulatorSessions
+    .filter(s => s.club === chartClub)
+    .slice()
+    .sort((a,b) => (a.date === b.date ? a.id - b.id : (a.date < b.date ? -1 : 1)));
+
+  if (!shots.length) {
+    html += '<div class="chart-empty">No shots logged for ' + esc(chartClub) + ' yet. Log some on a 🎯 simulator day and the graphs bloom here. 🌱</div>';
+  } else {
+    const metrics = [
+      { title: "Total distance (yds)", dp: 0, get: s => (s.totalDistance != null && s.totalDistance !== "") ? Number(s.totalDistance) : null },
+      { title: "Carry (yds)", dp: 0, get: s => (s.carry != null && s.carry !== "") ? Number(s.carry) : null },
+      { title: "Launch angle (°)", dp: 1, get: s => (s.launchAngle != null && s.launchAngle !== "") ? Number(s.launchAngle) : null },
+      { title: "Launch direction (° · L = − / R = +)", dp: 1, zeroLine: true, get: s => signed(s.launchDirDeg, s.launchDirSide) },
+      { title: "Back spin (rpm)", dp: 0, get: s => (s.backSpin != null && s.backSpin !== "") ? Number(s.backSpin) : null },
+      { title: "Side spin (rpm · L = − / R = +)", dp: 0, zeroLine: true, get: s => signed(s.sideSpin, s.sideSpinSide) },
+      { title: "Ball speed (mph)", dp: 1, get: s => (s.ballSpeed != null && s.ballSpeed !== "") ? Number(s.ballSpeed) : null },
+      { title: "Club speed (mph)", dp: 1, get: s => (s.clubSpeed != null && s.clubSpeed !== "") ? Number(s.clubSpeed) : null },
+      { title: "Smash factor (ball ÷ club)", dp: 2, get: s => (s.smashFactor != null && s.smashFactor !== "") ? Number(s.smashFactor) : null }
+    ];
+    metrics.forEach(mt => {
+      const pts = [];
+      shots.forEach(s => {
+        const v = mt.get(s);
+        if (v != null && !isNaN(v)) pts.push({ y: v, label: s.date });
+      });
+      html += '<div class="chart-block"><p class="chart-title">' + mt.title + " — " + esc(chartClub) + "</p>";
+      if (pts.length) {
+        html += '<div class="chart-frame">' + lineChartSVG(pts, { label: mt.title, dp: mt.dp, zeroLine: !!mt.zeroLine }) + "</div>"
+          + '<p class="muted" style="margin:4px 0 0;">' + pts.length + " shot" + (pts.length>1?"s":"") + " · each dot is one logged shot, in order</p>";
+      } else {
+        html += '<div class="chart-empty">No data for this metric yet.</div>';
+      }
+      html += "</div>";
+    });
+
+    // shot shape distribution (matches the picker)
+    const shapeCounts = SHAPES.map(sh => shots.filter(s => s.direction === sh).length);
+    html += '<div class="chart-block"><p class="chart-title">Shot shape — ' + esc(chartClub) + "</p>";
+    if (shapeCounts.some(c => c > 0)) {
+      html += '<div class="chart-frame">' + shapeBarChartSVG(shapeCounts) + "</div>";
+    } else {
+      html += '<div class="chart-empty">No shot shapes recorded for this club yet.</div>';
+    }
+    html += "</div>";
+  }
+  html += "</div>";
+
+  /* ---- shot path tracker ---- */
+  html += '<div class="card"><h2>🛤️ Shot Path Tracker</h2>'
+    + '<p class="muted" style="margin-top:0;">Top-down flight paths drawn with pure math from your logged data — launch direction (L/R), side spin (L/R), carry, total distance, back spin and launch angle. No AI involved. Tap any line to inspect that shot; colors match the shot-shape picker.</p>'
+    + '<div class="field" style="max-width:220px;margin-bottom:12px;"><label class="mini-label" style="font-weight:600;">Club</label>'
+    + '<select style="width:100%;" onchange="trackClub=this.value;selectedShotId=null;render()">'
+    + '<option' + (trackClub === "All" ? " selected" : "") + '>All</option>';
+  CLUBS.forEach(c => { html += '<option' + (trackClub === c ? " selected" : "") + ">" + esc(c) + "</option>"; });
+  html += "</select></div>";
+
+  const trackShots = simulatorSessions
+    .filter(s => trackClub === "All" || s.club === trackClub)
+    .slice()
+    .sort((a,b) => (a.date === b.date ? a.id - b.id : (a.date < b.date ? -1 : 1)));
+  const trackSVG = pathTrackerSVG(trackShots);
+  if (trackSVG) {
+    const selShot = selectedShotId != null ? simulatorSessions.find(x => x.id === selectedShotId) : null;
+    html += '<div class="chart-frame">' + trackSVG + "</div>"
+      + '<div id="shot-detail" class="shot-detail' + (selShot ? " active" : "") + '">'
+      + (selShot ? shotDetailHTML(selShot) : "👆 Tap a path to inspect that shot.")
+      + "</div>";
+  } else {
+    html += '<div class="chart-empty">No drawable shots for ' + esc(trackClub === "All" ? "any club" : trackClub) + ' yet — a shot needs at least a carry or total distance. Log some and the fairway fills up. 🌱</div>';
+  }
+  html += "</div>";
+
+  /* ---- AI coach ---- */
+  html += '<div class="card"><h2>🤖 AI Coach — Renovate Next Week</h2>'
+    + '<p class="muted" style="margin-top:0;">Sends your profile, plan, workout history, exercise feel log, daily feel and every sim shot to Claude, which redesigns the <strong>exercises</strong> for each day while keeping your weekly schedule (day types and session titles) exactly as-is. Your current plan is backed up first, so you can undo.</p>'
+    + '<div class="btn-row">'
+    + '<button class="btn" onclick="askClaude()">🪄 Ask Claude to Renovate Plan</button>'
+    + '<button class="btn secondary" onclick="undoAIPlan()">↩️ Undo Last Renovation</button>'
+    + "</div>"
+    + '<div class="ai-status" id="ai-status"></div>'
+    + '<details><summary>Running this file locally? Use copy &amp; paste instead</summary>'
+    + '<p class="muted">The one-click button works when this app runs inside Claude.ai. If you opened the file directly in your browser, click below to copy a complete prompt (with all your data baked in), paste it into a Claude chat, then paste Claude\u2019s JSON reply back here and apply it.</p>'
+    + '<div class="btn-row"><button class="btn secondary" onclick="copyAIPrompt()">📋 Copy Prompt for Claude</button></div>'
+    + '<textarea id="ai-paste" placeholder="Paste Claude\u2019s JSON reply here…"></textarea>'
+    + '<div style="margin-top:10px;"><button class="btn" onclick="applyPastedPlan()">Apply Pasted Plan ✅</button></div>'
+    + "</details>"
+    + "</div>";
+
+  /* ---- data & export ---- */
+  html += '<div class="card"><h2>💾 Your Data</h2>'
+    + '<p class="muted" style="margin-top:0;">All data lives in this browser\u2019s localStorage on this device — nothing is uploaded anywhere (except when you actively use the AI features). It stays until you clear this site\u2019s browsing data. Export a backup regularly!</p>'
+    + '<div class="btn-row">'
+    + '<button class="btn" onclick="exportData()">⬇️ Export All Data (JSON)</button>'
+    + '<button class="btn secondary" onclick="exportCSV()">⬇️ Export Sim Shots (CSV for Excel)</button>'
+    + "</div>"
+    + "</div>";
+
+  return html;
+}
+
+function saveProfile() {
+  userProfile.name = document.getElementById("pf-name").value.trim();
+  const h = Number(document.getElementById("pf-h").value);
+  const w = Number(document.getElementById("pf-w").value);
+  if (h > 0) userProfile.heightCm = h;
+  if (w > 0) userProfile.weightKg = w;
+  userProfile.goals = document.getElementById("pf-g").value.trim() || DEFAULT_PROFILE.goals;
+  saveAll();
+  updateTagline();
+  toast("Profile saved 👤");
+}
+
+/* =========================================================
+   PUTTING PRACTICE TRACKER (independent section)
+========================================================= */
+const PUTT_W = 500, PUTT_H = 320;
+const PUTT_HOLE = { x: 250, y: 160 };   // hole at canvas center so all rings fit
+const PUTT_SCALE = 7;                    // fixed px per yd — 20-yd ring (140px) always fully visible
+const PUTT_MADE_R = 10; // taps within this radius of the hole count as made
+
+function freshPuttRound() {
+  return { id: Date.now(), date: todayStr(), start: null, distanceYds: null, putts: [], done: false };
+}
+function savePutt() {
+  save(KEYS.puttCurrent, puttCurrent);
+  save(KEYS.puttRounds, puttingRounds);
+}
+function pdist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+/* place a ring's yardage label wherever it's visible:
+   above the ring, else below it, else just inside its left/right edge */
+function ringLabel(cx, cy, rad, yd, W, H) {
+  let x = cx, y = null, anchor = "middle";
+  if (cy - rad - 5 > 12) { y = cy - rad - 5; }
+  else if (cy + rad + 12 < H - 4) { y = cy + rad + 12; }
+  else if (cx - rad - 48 > 2) { x = cx - rad - 4; y = cy + 3; anchor = "end"; }
+  else if (cx + rad + 48 < W - 2) { x = cx + rad + 4; y = cy + 3; anchor = "start"; }
+  else if (cx - rad > 8) { x = cx - rad + 6; y = cy - 5; anchor = "start"; }
+  else return "";
+  return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + anchor + '" font-size="10" font-weight="bold" font-family="monospace" fill="#FFFFFF" opacity="0.85">' + yd + " yds</text>";
+}
+function puttStats(r) {
+  const makes = r.putts.filter(p => pdist(p, PUTT_HOLE) <= PUTT_MADE_R).length;
+  let avgMissYds = null;
+  if (r.putts.length) {
+    // same fixed px-per-yd scale as the rings, so a ball on the
+    // "10 yds" ring reads as a 10-yard miss
+    avgMissYds = r.putts.reduce((a, p) => {
+      const d = pdist(p, PUTT_HOLE);
+      return a + (d <= PUTT_MADE_R ? 0 : d / PUTT_SCALE);
+    }, 0) / r.putts.length;
+  }
+  return { makes: makes, avgMissYds: avgMissYds };
+}
+
+function puttGreenSVG(r, interactive) {
+  let svg = '<svg id="putt-green" viewBox="0 0 ' + PUTT_W + " " + PUTT_H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Putting green"'
+    + (interactive ? ' class="tappable" onclick="puttCanvasClick(event)"' : "")
+    + ">"
+    + "<defs>"
+    + '<pattern id="mow" width="64" height="64" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">'
+    + '<rect width="64" height="64" fill="#3E9E52"/>'
+    + '<rect width="32" height="64" fill="#48AC5C"/>'
+    + "</pattern>"
+    + "</defs>"
+    + '<rect x="0" y="0" width="' + PUTT_W + '" height="' + PUTT_H + '" fill="url(#mow)"/>'
+    + '<ellipse cx="120" cy="230" rx="150" ry="70" fill="#FFFFFF" opacity="0.05"/>'
+    + '<ellipse cx="400" cy="70" rx="130" ry="60" fill="#000000" opacity="0.04"/>';
+
+  const hx = PUTT_HOLE.x, hy = PUTT_HOLE.y;
+  // dashed distance rings at 5/10/15/20 yds on a fixed scale so every
+  // ring (and its dashes) is fully visible on the canvas
+  const puttScale = PUTT_SCALE;
+  [5, 10, 15, 20].forEach(yd => {
+    const rad = yd * puttScale;
+    if (rad > 8 && rad < 900) {
+      svg += '<circle cx="' + hx + '" cy="' + hy + '" r="' + rad.toFixed(1) + '" fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-dasharray="5 8" opacity="0.55"/>'
+        + ringLabel(hx, hy, rad, yd, PUTT_W, PUTT_H);
+    }
+  });
+  // flag shadow
+  svg += '<line x1="' + hx + '" y1="' + hy + '" x2="' + (hx - 55) + '" y2="' + (hy + 75) + '" stroke="#0E2415" stroke-width="3" opacity="0.22" stroke-linecap="round"/>';
+  // hole, stick, flag
+  svg += '<circle cx="' + hx + '" cy="' + hy + '" r="6.5" fill="#0E2415"/>'
+    + '<line x1="' + hx + '" y1="' + hy + '" x2="' + hx + '" y2="' + (hy - 44) + '" stroke="#EDE8DA" stroke-width="2.5"/>'
+    + '<polygon points="' + hx + "," + (hy - 44) + " " + (hx + 30) + "," + (hy - 36) + " " + hx + "," + (hy - 28) + '" fill="#D6362B"/>';
+
+  // aim line
+  if (r.start) {
+    svg += '<line x1="' + r.start.x.toFixed(1) + '" y1="' + r.start.y.toFixed(1) + '" x2="' + hx + '" y2="' + hy + '" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4 7" opacity="0.7"/>';
+  }
+  // putts — made balls nest around the cup so the hole can hold several
+  const MADE_OFFSETS = [
+    {x:0,y:0},{x:6,y:-3},{x:-6,y:-3},{x:4,y:6},{x:-4,y:6},
+    {x:8,y:2},{x:-8,y:2},{x:0,y:-7},{x:7,y:7},{x:-7,y:7}
+  ];
+  let madeCount = 0;
+  r.putts.forEach((p, i) => {
+    const made = pdist(p, PUTT_HOLE) <= PUTT_MADE_R;
+    let bx = p.x, by = p.y, br = 6;
+    if (made) {
+      const off = MADE_OFFSETS[madeCount % MADE_OFFSETS.length];
+      madeCount++;
+      bx = hx + off.x; by = hy + off.y; br = 4.5;
+    }
+    svg += '<circle cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="' + br + '" fill="' + (made ? "#FFD23F" : "#FFFFFF") + '" stroke="#14281D" stroke-width="1.3"/>'
+      + '<text x="' + bx.toFixed(1) + '" y="' + (by + 2.4).toFixed(1) + '" text-anchor="middle" font-size="' + (made ? 6.5 : 7.5) + '" font-weight="bold" font-family="sans-serif" fill="#14281D">' + (i + 1) + "</text>";
+  });
+  // start marker
+  if (r.start) {
+    svg += '<circle cx="' + r.start.x.toFixed(1) + '" cy="' + r.start.y.toFixed(1) + '" r="10" fill="none" stroke="#FFFFFF" stroke-width="2"/>'
+      + '<circle cx="' + r.start.x.toFixed(1) + '" cy="' + r.start.y.toFixed(1) + '" r="5.5" fill="#FFFFFF" stroke="#14281D" stroke-width="1.3"/>'
+      + '<text x="' + r.start.x.toFixed(1) + '" y="' + (r.start.y - 15).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="bold" font-family="sans-serif" fill="#FFFFFF">START</text>';
+  }
+  svg += "</svg>";
+  return svg;
+}
+
+function puttCanvasClick(evt) {
+  if (viewPuttId != null) return;
+  if (!puttCurrent) puttCurrent = freshPuttRound();
+  const r = puttCurrent;
+  if (r.done) return;
+  const svg = evt.currentTarget;
+  const b = svg.getBoundingClientRect();
+  const x = (evt.clientX - b.left) / b.width * PUTT_W;
+  const y = (evt.clientY - b.top) / b.height * PUTT_H;
+  if (!r.start) {
+    r.start = { x: x, y: y };
+  } else if (r.putts.length < 10) {
+    r.putts.push({ x: x, y: y });
+    if (r.putts.length === 10) {
+      r.done = true;
+      puttingRounds.push(JSON.parse(JSON.stringify(r)));
+      toast("Round of 10 saved! 🥅 Save the image or start a fresh green.");
+    }
+  }
+  savePutt();
+  render();
+}
+function setPuttDistance(v) {
+  if (!puttCurrent) puttCurrent = freshPuttRound();
+  puttCurrent.distanceYds = v === "" ? null : Number(v);
+  if (puttCurrent.done) {
+    const saved = puttingRounds.find(x => x.id === puttCurrent.id);
+    if (saved) saved.distanceYds = puttCurrent.distanceYds;
+  }
+  savePutt();
+}
+function undoPutt() {
+  if (viewPuttId != null || !puttCurrent) return;
+  const r = puttCurrent;
+  if (r.done) { toast("Round already saved — start a new round instead."); return; }
+  if (r.putts.length) r.putts.pop();
+  else r.start = null;
+  savePutt(); render();
+}
+function resetPuttRound() {
+  if (!confirmTap("resetPutt", "Tap again to clear the current round ⚠️")) return;
+  puttCurrent = freshPuttRound();
+  viewPuttId = null;
+  savePutt(); render();
+}
+function newPuttRound() {
+  puttCurrent = freshPuttRound();
+  viewPuttId = null;
+  savePutt(); render();
+  toast("Clean green — tap to set your start point. 🟢");
+}
+function viewPuttRound(id) { viewPuttId = id; render(); window.scrollTo({ top: 0 }); }
+function backToCurrentPutt() { viewPuttId = null; render(); }
+function deletePuttRound(id) {
+  if (!confirmTap("delPutt" + id, "Tap ✕ again to delete this round ⚠️")) return;
+  puttingRounds = puttingRounds.filter(r => r.id !== id);
+  if (viewPuttId === id) viewPuttId = null;
+  savePutt(); render();
+  toast("Round deleted.");
+}
+function exportSVGPNG(svgId, baseName) {
+  const svgEl = document.getElementById(svgId);
+  if (!svgEl) { toast("Nothing to save yet."); return; }
+  const xml = new XMLSerializer().serializeToString(svgEl);
+  const svg64 = btoa(unescape(encodeURIComponent(xml)));
+  const img = new Image();
+  img.onload = function() {
+    const c = document.createElement("canvas");
+    c.width = 1000; c.height = Math.round(1000 * svgEl.viewBox.baseVal.height / svgEl.viewBox.baseVal.width);
+    const ctx = c.getContext("2d");
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(function(b) {
+      const url = URL.createObjectURL(b);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = baseName + "-" + todayStr() + ".png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast("Image saved 📸");
+    }, "image/png");
+  };
+  img.onerror = function() { toast("Couldn't render the image — try again."); };
+  img.src = "data:image/svg+xml;base64," + svg64;
+}
+function exportGreenPNG() { exportSVGPNG("putt-green", "putting-green"); }
+
+function renderPutting() {
+  if (!puttCurrent) puttCurrent = freshPuttRound();
+  const viewing = viewPuttId != null ? puttingRounds.find(x => x.id === viewPuttId) : null;
+  const r = viewing || puttCurrent;
+  const st = puttStats(r);
+
+  let status;
+  if (viewing) status = "👀 Viewing saved round from " + esc(r.date);
+  else if (!r.start) status = "Step 1 — tap the green to set your START point 🎯";
+  else if (!r.done) status = "Ball " + (r.putts.length + 1) + " of 10 — tap where it finished";
+  else status = "Round complete &amp; saved ✅ — save the image or start a clean green";
+
+  let html = '<div class="card"><h2>🥅 Putting Practice</h2>'
+    + '<p class="muted" style="margin-top:0;">Tap once to place your start point, then tap where each of 10 balls finishes. Balls landing in the hole ring turn gold. Rounds are saved automatically after ball 10 and included in the AI Coach\u2019s data.</p>'
+    + '<div class="form-grid" style="margin-bottom:6px;">'
+    + '<div class="field"><label for="putt-dist">Start distance to hole (yds)</label>'
+    + '<input type="number" id="putt-dist" step="0.5" min="0" inputmode="decimal" value="' + esc(r.distanceYds ?? "") + '" onchange="setPuttDistance(this.value)"' + (viewing ? " disabled" : "") + "></div>"
+    + '<div class="field"><label>Round stats</label><div class="putt-chips" style="margin:0;">'
+    + '<span class="chip">🏌️ ' + r.putts.length + "/10</span>"
+    + '<span class="chip">🥅 ' + st.makes + " made</span>"
+    + (st.avgMissYds != null ? '<span class="chip">📏 avg miss ' + st.avgMissYds.toFixed(1) + " yds</span>" : "")
+    + "</div></div>"
+    + "</div>"
+    + '<p class="putt-status">' + status + "</p>"
+    + '<div class="putt-frame">' + puttGreenSVG(r, !viewing && !r.done) + "</div>"
+    + '<div class="btn-row" style="margin-top:12px;">';
+  if (viewing) {
+    html += '<button class="btn" onclick="backToCurrentPutt()">⬅️ Back to Current Round</button>'
+      + '<button class="btn secondary" onclick="exportGreenPNG()">📸 Save Green Image (PNG)</button>';
+  } else {
+    html += '<button class="btn secondary" onclick="undoPutt()">↩️ Undo Last Tap</button>'
+      + '<button class="btn secondary" onclick="resetPuttRound()">🔄 Reset Round</button>'
+      + '<button class="btn secondary" onclick="exportGreenPNG()">📸 Save Green Image (PNG)</button>';
+    if (r.done) html += '<button class="btn" onclick="newPuttRound()">🟢 Start New Round</button>';
+  }
+  html += "</div></div>";
+
+  /* saved rounds */
+  html += '<div class="card"><h3>📚 Saved Rounds</h3>';
+  if (puttingRounds.length) {
+    html += '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Dist (yds)</th><th>Balls</th><th>Made</th><th>Avg miss (yds)</th><th></th><th></th></tr></thead><tbody>';
+    puttingRounds.slice().sort((a,b) => b.id - a.id).forEach(pr => {
+      const ps = puttStats(pr);
+      html += "<tr><td>" + esc(pr.date) + "</td>"
+        + '<td class="num">' + fmt(pr.distanceYds, 1) + "</td>"
+        + '<td class="num">' + pr.putts.length + "</td>"
+        + '<td class="num">' + ps.makes + "</td>"
+        + '<td class="num">' + (ps.avgMissYds != null ? ps.avgMissYds.toFixed(1) : "–") + "</td>"
+        + '<td><button class="btn small secondary" onclick="viewPuttRound(' + pr.id + ')">View</button></td>'
+        + '<td><button class="btn small secondary" onclick="deletePuttRound(' + pr.id + ')">✕</button></td>'
+        + "</tr>";
+    });
+    html += "</tbody></table></div>"
+      + '<p class="muted" style="margin:8px 0 0;">All saved rounds ride along in the AI Coach payload and the JSON export.</p>';
+  } else {
+    html += '<div class="chart-empty">No saved rounds yet — finish a round of 10 and it lands here.</div>';
+  }
+  html += "</div>";
+  return html;
+}
+
+/* =========================================================
+   CHIPPING PRACTICE TRACKER (independent section)
+   Same logic as putting, plus a user-planted pin.
+========================================================= */
+const CHIP_W = 500, CHIP_H = 420;
+const CHIP_SCALE = 3.8;                    // fixed px per yd — 50-yd ring (190px) always fully visible
+const CHIP_CENTER = { x: 250, y: 210 };    // the pin is panned to this screen point
+const CHIP_MADE_R = 8;            // taps this close to the pin count as holed
+
+function chipOffsets(r) {
+  if (!r.pin) return { dx: 0, dy: 0 };
+  return { dx: CHIP_CENTER.x - r.pin.x, dy: CHIP_CENTER.y - r.pin.y };
+}
+
+function freshChipRound() {
+  return { id: Date.now(), date: todayStr(), pin: null, start: null, distanceYds: null, shots: [], done: false };
+}
+function saveChip() {
+  save(KEYS.chipCurrent, chipCurrent);
+  save(KEYS.chipRounds, chipRounds);
+}
+function chipStats(r) {
+  if (!r.pin) return { makes: 0, avgMissYds: null };
+  const makes = r.shots.filter(p => pdist(p, r.pin) <= CHIP_MADE_R).length;
+  let avgMissYds = null;
+  if (r.shots.length) {
+    // same fixed px-per-yd scale as the rings
+    avgMissYds = r.shots.reduce((a, p) => {
+      const d = pdist(p, r.pin);
+      return a + (d <= CHIP_MADE_R ? 0 : d / CHIP_SCALE);
+    }, 0) / r.shots.length;
+  }
+  return { makes: makes, avgMissYds: avgMissYds };
+}
+
+function chipGreenSVG(r, interactive) {
+  const off = chipOffsets(r);
+  let svg = '<svg id="chip-green" viewBox="0 0 ' + CHIP_W + " " + CHIP_H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chipping green"'
+    + (interactive ? ' class="tappable" onclick="chipCanvasClick(event)"' : "")
+    + ">"
+    + "<defs>"
+    + '<pattern id="roughp" width="22" height="22" patternUnits="userSpaceOnUse">'
+    + '<rect width="22" height="22" fill="#2F6C34"/>'
+    + '<circle cx="6" cy="6" r="3.2" fill="#2A612F"/>'
+    + '<circle cx="17" cy="14" r="2.6" fill="#356F39"/>'
+    + "</pattern>"
+    + "</defs>"
+    /* the whole scene pans so the planted pin lands at screen center */
+    + '<g transform="translate(' + off.dx.toFixed(1) + " " + off.dy.toFixed(1) + ')">'
+    /* oversized rough so panning never reveals gaps */
+    + '<rect x="-300" y="-300" width="1100" height="1020" fill="url(#roughp)"/>'
+    /* surrounding foliage */
+    + '<circle cx="472" cy="52" r="46" fill="#A9B23A" opacity="0.85"/>'
+    + '<circle cx="500" cy="118" r="32" fill="#8FA22F" opacity="0.8"/>'
+    + '<circle cx="14" cy="36" r="30" fill="#245427" opacity="0.9"/>'
+    + '<circle cx="18" cy="396" r="40" fill="#1F4A24" opacity="0.9"/>'
+    + '<circle cx="482" cy="400" r="36" fill="#245427" opacity="0.9"/>'
+    /* fringe + green */
+    + '<ellipse cx="250" cy="210" rx="205" ry="162" fill="#4C8740"/>'
+    + '<ellipse cx="250" cy="210" rx="182" ry="142" fill="#9AAB56"/>'
+    + '<ellipse cx="250" cy="208" rx="152" ry="115" fill="#A3B25E" opacity="0.55"/>';
+
+  // aim line (world coords)
+  if (r.pin && r.start) {
+    svg += '<line x1="' + r.start.x.toFixed(1) + '" y1="' + r.start.y.toFixed(1) + '" x2="' + r.pin.x.toFixed(1) + '" y2="' + r.pin.y.toFixed(1) + '" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4 7" opacity="0.7"/>';
+  }
+
+  // shots (world coords) — holed balls nest around the pin
+  if (r.pin) {
+    const OFFS = [
+      {x:0,y:0},{x:6,y:-3},{x:-6,y:-3},{x:4,y:6},{x:-4,y:6},
+      {x:8,y:2},{x:-8,y:2},{x:0,y:-7},{x:7,y:7},{x:-7,y:7}
+    ];
+    let holed = 0;
+    r.shots.forEach((p, i) => {
+      const made = pdist(p, r.pin) <= CHIP_MADE_R;
+      let bx = p.x, by = p.y, br = 6;
+      if (made) {
+        const o = OFFS[holed % OFFS.length];
+        holed++;
+        bx = r.pin.x + o.x; by = r.pin.y + o.y; br = 4.5;
+      }
+      svg += '<circle cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="' + br + '" fill="' + (made ? "#FFD23F" : "#FFFFFF") + '" stroke="#14281D" stroke-width="1.3"/>'
+        + '<text x="' + bx.toFixed(1) + '" y="' + (by + 2.4).toFixed(1) + '" text-anchor="middle" font-size="' + (made ? 6.5 : 7.5) + '" font-weight="bold" font-family="sans-serif" fill="#14281D">' + (i + 1) + "</text>";
+    });
+  }
+
+  // start marker (world coords)
+  if (r.start) {
+    svg += '<circle cx="' + r.start.x.toFixed(1) + '" cy="' + r.start.y.toFixed(1) + '" r="10" fill="none" stroke="#FFFFFF" stroke-width="2"/>'
+      + '<circle cx="' + r.start.x.toFixed(1) + '" cy="' + r.start.y.toFixed(1) + '" r="5.5" fill="#FFFFFF" stroke="#14281D" stroke-width="1.3"/>'
+      + '<text x="' + r.start.x.toFixed(1) + '" y="' + (r.start.y - 15).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="bold" font-family="sans-serif" fill="#FFFFFF">START</text>';
+  }
+  svg += "</g>";
+
+  // rings + pin at fixed screen center (the pan puts the pin exactly here,
+  // so all five dashed rings and their labels are always fully visible)
+  if (r.pin) {
+    const cx = CHIP_CENTER.x, cy = CHIP_CENTER.y;
+    [10, 20, 30, 40, 50].forEach(yd => {
+      const rad = yd * CHIP_SCALE;
+      svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad.toFixed(1) + '" fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-dasharray="5 8" opacity="0.55"/>'
+        + ringLabel(cx, cy, rad, yd, CHIP_W, CHIP_H);
+    });
+    svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx - 40) + '" y2="' + (cy + 55) + '" stroke="#14301B" stroke-width="3" opacity="0.22" stroke-linecap="round"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="#14301B"/>'
+      + '<line x1="' + cx + '" y1="' + cy + '" x2="' + cx + '" y2="' + (cy - 42) + '" stroke="#EDE8DA" stroke-width="2.5"/>'
+      + '<polygon points="' + cx + "," + (cy - 42) + " " + (cx + 28) + "," + (cy - 34) + " " + cx + "," + (cy - 26) + '" fill="#D6362B"/>';
+  }
+  svg += "</svg>";
+  return svg;
+}
+
+function chipCanvasClick(evt) {
+  if (viewChipId != null) return;
+  if (!chipCurrent) chipCurrent = freshChipRound();
+  const r = chipCurrent;
+  if (r.done) return;
+  const svg = evt.currentTarget;
+  const b = svg.getBoundingClientRect();
+  const off = chipOffsets(r); // pan applied before this tap
+  const x = (evt.clientX - b.left) / b.width * CHIP_W - off.dx;
+  const y = (evt.clientY - b.top) / b.height * CHIP_H - off.dy;
+  if (!r.pin) {
+    r.pin = { x: x, y: y };
+  } else if (!r.start) {
+    r.start = { x: x, y: y };
+  } else if (r.shots.length < 10) {
+    r.shots.push({ x: x, y: y });
+    if (r.shots.length === 10) {
+      r.done = true;
+      chipRounds.push(JSON.parse(JSON.stringify(r)));
+      toast("Chipping round of 10 saved! 🥅");
+    }
+  }
+  saveChip();
+  render();
+}
+function setChipDistance(v) {
+  if (!chipCurrent) chipCurrent = freshChipRound();
+  chipCurrent.distanceYds = v === "" ? null : Number(v);
+  if (chipCurrent.done) {
+    const saved = chipRounds.find(x => x.id === chipCurrent.id);
+    if (saved) saved.distanceYds = chipCurrent.distanceYds;
+  }
+  saveChip();
+}
+function undoChip() {
+  if (viewChipId != null || !chipCurrent) return;
+  const r = chipCurrent;
+  if (r.done) { toast("Round already saved — start a new round instead."); return; }
+  if (r.shots.length) r.shots.pop();
+  else if (r.start) r.start = null;
+  else r.pin = null;
+  saveChip(); render();
+}
+function resetChipRound() {
+  if (!confirmTap("resetChip", "Tap again to clear the current round ⚠️")) return;
+  chipCurrent = freshChipRound();
+  viewChipId = null;
+  saveChip(); render();
+}
+function newChipRound() {
+  chipCurrent = freshChipRound();
+  viewChipId = null;
+  saveChip(); render();
+  toast("Fresh green — tap to plant the pin. 🚩");
+}
+function viewChipRound(id) { viewChipId = id; render(); window.scrollTo({ top: 0 }); }
+function backToCurrentChip() { viewChipId = null; render(); }
+function deleteChipRound(id) {
+  if (!confirmTap("delChip" + id, "Tap ✕ again to delete this round ⚠️")) return;
+  chipRounds = chipRounds.filter(r => r.id !== id);
+  if (viewChipId === id) viewChipId = null;
+  saveChip(); render();
+  toast("Round deleted.");
+}
+
+function renderChipping() {
+  if (!chipCurrent) chipCurrent = freshChipRound();
+  const viewing = viewChipId != null ? chipRounds.find(x => x.id === viewChipId) : null;
+  const r = viewing || chipCurrent;
+  const st = chipStats(r);
+
+  let status;
+  if (viewing) status = "👀 Viewing saved round from " + esc(r.date);
+  else if (!r.pin) status = "Step 1 — tap the green to plant the PIN 🚩";
+  else if (!r.start) status = "Step 2 — tap your chipping START spot";
+  else if (!r.done) status = "Ball " + (r.shots.length + 1) + " of 10 — tap where it finished";
+  else status = "Round complete &amp; saved ✅ — save the image or start a fresh green";
+
+  let html = '<div class="card"><h2>🪁 Chipping Practice</h2>'
+    + '<p class="muted" style="margin-top:0;">Tap once to plant the pin, once more for your start spot, then tap where each of 10 chips finishes. Balls holed turn gold. Rounds auto-save after ball 10 and feed the AI Coach.</p>'
+    + '<div class="form-grid" style="margin-bottom:6px;">'
+    + '<div class="field"><label for="chip-dist">Start distance to pin (yds)</label>'
+    + '<input type="number" id="chip-dist" step="0.5" min="0" inputmode="decimal" value="' + esc(r.distanceYds ?? "") + '" onchange="setChipDistance(this.value)"' + (viewing ? " disabled" : "") + "></div>"
+    + '<div class="field"><label>Round stats</label><div class="putt-chips" style="margin:0;">'
+    + '<span class="chip">🏌️ ' + r.shots.length + "/10</span>"
+    + '<span class="chip">🥅 ' + st.makes + " holed</span>"
+    + (st.avgMissYds != null ? '<span class="chip">📏 avg miss ' + st.avgMissYds.toFixed(1) + " yds</span>" : "")
+    + "</div></div>"
+    + "</div>"
+    + '<p class="putt-status">' + status + "</p>"
+    + '<div class="putt-frame">' + chipGreenSVG(r, !viewing && !r.done) + "</div>"
+    + '<div class="btn-row" style="margin-top:12px;">';
+  if (viewing) {
+    html += '<button class="btn" onclick="backToCurrentChip()">⬅️ Back to Current Round</button>'
+      + '<button class="btn secondary" onclick="exportSVGPNG(\'chip-green\',\'chipping-green\')">📸 Save Green Image (PNG)</button>';
+  } else {
+    html += '<button class="btn secondary" onclick="undoChip()">↩️ Undo Last Tap</button>'
+      + '<button class="btn secondary" onclick="resetChipRound()">🔄 Reset Round</button>'
+      + '<button class="btn secondary" onclick="exportSVGPNG(\'chip-green\',\'chipping-green\')">📸 Save Green Image (PNG)</button>';
+    if (r.done) html += '<button class="btn" onclick="newChipRound()">🟢 Start New Round</button>';
+  }
+  html += "</div></div>";
+
+  /* saved rounds */
+  html += '<div class="card"><h3>📚 Saved Rounds</h3>';
+  if (chipRounds.length) {
+    html += '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Dist (yds)</th><th>Balls</th><th>Holed</th><th>Avg miss (yds)</th><th></th><th></th></tr></thead><tbody>';
+    chipRounds.slice().sort((a,b) => b.id - a.id).forEach(cr => {
+      const cs = chipStats(cr);
+      html += "<tr><td>" + esc(cr.date) + "</td>"
+        + '<td class="num">' + fmt(cr.distanceYds, 1) + "</td>"
+        + '<td class="num">' + cr.shots.length + "</td>"
+        + '<td class="num">' + cs.makes + "</td>"
+        + '<td class="num">' + (cs.avgMissYds != null ? cs.avgMissYds.toFixed(1) : "–") + "</td>"
+        + '<td><button class="btn small secondary" onclick="viewChipRound(' + cr.id + ')">View</button></td>'
+        + '<td><button class="btn small secondary" onclick="deleteChipRound(' + cr.id + ')">✕</button></td>'
+        + "</tr>";
+    });
+    html += "</tbody></table></div>"
+      + '<p class="muted" style="margin:8px 0 0;">All saved rounds ride along in the AI Coach payload and the JSON export.</p>';
+  } else {
+    html += '<div class="chart-empty">No saved rounds yet — finish a round of 10 and it lands here.</div>';
+  }
+  html += "</div>";
+  return html;
+}
+
+/* =========================================================
+   AI COACH
+========================================================= */
+function buildAIPayload() {
+  return {
+    userProfile: userProfile,
+    weeklySchedule: weeklyPlan.map(d => ({ day: d.day, type: d.type, title: d.title })),
+    currentExercises: weeklyPlan.map(d => ({
+      day: d.day,
+      exercises: d.exercises.map(ex => ({
+        name: ex.name,
+        feelAfter: ex.feelAfter,
+        note: ex.note || "",
+        sets: ex.sets.map(s => {
+          const o = { reps: s.reps, done: !!s.done };
+          if ("weight" in s) { o.weight = s.weight; o.rpe = s.rpe; }
+          return o;
+        })
+      })),
+      clubNotes: d.notes
+    })),
+    workoutHistory: history,
+    dailyFeel: dailyFeel,
+    exerciseFeelLog: exerciseFeelLog,
+    simulatorSessions: simulatorSessions,
+    puttingPractice: puttingRounds.map(r => {
+      const ps = puttStats(r);
+      return {
+        date: r.date,
+        startDistanceYds: r.distanceYds,
+        balls: r.putts.length,
+        makes: ps.makes,
+        avgMissYds: ps.avgMissYds != null ? Number(ps.avgMissYds.toFixed(1)) : null,
+        holeXY: PUTT_HOLE,
+        startXY: r.start,
+        finishXY: r.putts
+      };
+    }),
+    chippingPractice: chipRounds.map(r => {
+      const cs = chipStats(r);
+      return {
+        date: r.date,
+        startDistanceYds: r.distanceYds,
+        balls: r.shots.length,
+        holed: cs.makes,
+        avgMissYds: cs.avgMissYds != null ? Number(cs.avgMissYds.toFixed(1)) : null,
+        pinXY: r.pin,
+        startXY: r.start,
+        finishXY: r.shots
+      };
+    })
+  };
+}
+
+function buildAIPrompt() {
+  const payload = buildAIPayload();
+  return "You are an experienced golf fitness and performance coach. Below is my complete training data as JSON: "
+    + "my profile, my fixed weekly schedule, the current exercises per day, my workout completion history, "
+    + "my per-exercise feel log (1=felt awful, 5=felt great, across many sessions), how I felt each day overall, "
+    + "and every simulator shot I logged (carry, total distance, launch angle, launch direction L/R, back spin, "
+    + "side spin L/R, shot shape, ball speed, club speed, smash factor, notes), plus my putting practice rounds "
+    + "(start distance to hole in yards, makes out of 10, average miss in yards, and the tap coordinates of every finish point "
+    + "relative to holeXY — use the scatter to spot distance-control or left/right bias issues), and my chipping practice "
+    + "rounds in the same format (pinXY is the planted pin, startXY the chipping spot, finishXY the scatter of results).\n\n"
+    + "TASK: Redesign next week's EXERCISES based on this data. Pay special attention to: (1) exercises with "
+    + "consistently low feel ratings — replace or modify them; (2) swing data trends — distance, spin, direction "
+    + "bias, shot shape distribution and smash factor — and pick exercises that address the weaknesses they reveal. "
+    + "Keep everything golf-specific, safe, and progressive.\n\n"
+    + "HARD RULES:\n"
+    + "1. Keep the weekly SCHEDULE exactly as-is: same 7 days, same type (gym/simulator/recovery) and same title per day. Only change the exercises inside each day.\n"
+    + "2. Sunday stays a full rest day with an empty exercises array.\n"
+    + "3. For gym exercises where I should log weight and RPE, set \"trackWeight\": true on each of those sets.\n"
+    + "4. Respond with ONLY valid JSON. No markdown, no code fences, no commentary before or after.\n\n"
+    + "RESPONSE FORMAT (exactly this shape):\n"
+    + '{"days":[{"day":"Monday","exercises":[{"name":"Exercise name","sets":[{"reps":"description","trackWeight":false}]}]}, ...all 7 days...]}\n\n'
+    + "MY DATA:\n" + JSON.stringify(payload);
+}
+
+function setAIStatus(msg, cls) {
+  const el = document.getElementById("ai-status");
+  if (el) { el.textContent = msg; el.className = "ai-status " + (cls || ""); }
+}
+
+async function askClaude() {
+  setAIStatus("Caddying your data over to Claude… ⛳", "");
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: buildAIPrompt() }]
+      })
+    });
+    if (!response.ok) throw new Error("API returned " + response.status);
+    const data = await response.json();
+    const text = (data.content || [])
+      .filter(item => item.type === "text")
+      .map(item => item.text)
+      .join("\n");
+    applyNewPlanFromText(text);
+  } catch (err) {
+    console.error("Claude API error:", err);
+    setAIStatus("Couldn't reach Claude from here (" + err.message + "). If you opened this file locally, use the copy & paste option below instead.", "err");
+  }
+}
+
+function applyNewPlanFromText(text) {
+  let parsed;
+  try {
+    const clean = String(text).replace(/```json|```/g, "").trim();
+    parsed = JSON.parse(clean);
+  } catch (e) {
+    setAIStatus("Claude's reply wasn't valid JSON. Try again, or use copy & paste and check the reply.", "err");
+    return;
+  }
+  applyNewPlan(parsed);
+}
+
+function applyNewPlan(parsed) {
+  if (!parsed || !Array.isArray(parsed.days)) {
+    setAIStatus("Reply was missing a \"days\" array — plan unchanged.", "err");
+    return;
+  }
+  save(KEYS.planBackup, weeklyPlan);
+  let changed = 0;
+  weeklyPlan.forEach(d => {
+    const nd = parsed.days.find(x => x && x.day === d.day);
+    if (!nd || !Array.isArray(nd.exercises)) return;
+    d.exercises = nd.exercises.map(ex => ({
+      name: String(ex.name || "Exercise"),
+      feelAfter: null,
+      note: "",
+      sets: (Array.isArray(ex.sets) ? ex.sets : []).map(s => {
+        const o = { reps: String((s && s.reps) || ""), done: false };
+        if (s && s.trackWeight) { o.weight = null; o.rpe = null; }
+        return o;
+      })
+    }));
+    changed++;
+  });
+  saveAll();
+  setAIStatus("Plan renovated! " + changed + " day(s) updated. Old plan backed up — use Undo if needed.", "ok");
+  toast("New week, new plan! 🪄 Check the Plan tab.");
+  render();
+}
+
+function applyPastedPlan() {
+  const el = document.getElementById("ai-paste");
+  if (!el || !el.value.trim()) { setAIStatus("Paste Claude's JSON reply into the box first.", "err"); return; }
+  applyNewPlanFromText(el.value);
+}
+
+function undoAIPlan() {
+  const backup = load(KEYS.planBackup, null);
+  if (!backup) { setAIStatus("No backup found — nothing to undo yet.", "err"); return; }
+  weeklyPlan = backup;
+  saveAll();
+  setAIStatus("Previous plan restored. ↩️", "ok");
+  toast("Plan restored to the pre-renovation version.");
+  render();
+}
+
+async function copyAIPrompt() {
+  const prompt = buildAIPrompt();
+  try {
+    await navigator.clipboard.writeText(prompt);
+    setAIStatus("Prompt copied! Paste it into a Claude chat, then paste the JSON reply back below.", "ok");
+  } catch (e) {
+    const el = document.getElementById("ai-paste");
+    if (el) { el.value = prompt; el.select(); }
+    setAIStatus("Clipboard blocked — the prompt is in the box below. Copy it manually (Ctrl/Cmd+C), then clear the box and paste Claude's reply.", "err");
+  }
+}
+
+/* =========================================================
+   EXPORT
+========================================================= */
+function downloadBlob(content, filename, type) {
+  const blob = new Blob([content], { type: type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+function exportData() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    userProfile: userProfile,
+    weeklyPlan: weeklyPlan,
+    simulatorSessions: simulatorSessions,
+    dailyFeel: dailyFeel,
+    history: history,
+    exerciseFeelLog: exerciseFeelLog,
+    puttingRounds: puttingRounds,
+    puttingCurrent: puttCurrent,
+    chippingRounds: chipRounds,
+    chippingCurrent: chipCurrent
+  };
+  downloadBlob(JSON.stringify(data, null, 2), "golf-tracker-data.json", "application/json");
+  toast("Exported golf-tracker-data.json 💾");
+}
+function csvCell(v) {
+  const s = String(v == null ? "" : v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function exportCSV() {
+  if (!simulatorSessions.length) { toast("No sim shots to export yet 🎯"); return; }
+  const headers = ["date","day","club","totalDistance","carry","launchAngle","launchDirDeg","launchDirSide","backSpin","sideSpin","sideSpinSide","direction","ballSpeed","clubSpeed","smashFactor","notes"];
+  let csv = headers.join(",") + "\n";
+  simulatorSessions.forEach(s => {
+    csv += headers.map(h => csvCell(s[h])).join(",") + "\n";
+  });
+  downloadBlob(csv, "golf-tracker-sim-shots.csv", "text/csv");
+  toast("Exported golf-tracker-sim-shots.csv — opens straight in Excel 📊");
+}
+
+/* =========================================================
+   MAIN RENDER
+========================================================= */
+function render() {
+  const app = document.getElementById("app");
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  if (view === "plan") {
+    document.getElementById("tab-plan").classList.add("active");
+    app.innerHTML = renderPlan();
+  } else if (view === "today" || view === "workout") {
+    document.getElementById("tab-today").classList.add("active");
+    app.innerHTML = renderWorkout(selectedDay);
+  } else if (view === "putt") {
+    document.getElementById("tab-putt").classList.add("active");
+    app.innerHTML = renderPutting();
+  } else if (view === "chip") {
+    document.getElementById("tab-chip").classList.add("active");
+    app.innerHTML = renderChipping();
+  } else {
+    document.getElementById("tab-progress").classList.add("active");
+    app.innerHTML = renderProgress();
+  }
+}
+
+updateTagline();
+render();
+</script>
+</body>
+</html>
